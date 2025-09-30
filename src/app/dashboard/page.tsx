@@ -14,29 +14,43 @@ import {
 import { useLogout } from '@/utils/logout';
 
 interface Job {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   poster: string;
   location: string;
+  requirements?: string[];
+  salary?: string;
+  workModel?: string;
+  status?: string;
+  applied?: boolean; // ✅ whether the current user applied
 }
 
 export default function SeekerDashboardPage() {
   const [activePage, setActivePage] = useState("home");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [search, setSearch] = useState('');
-  const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
   const [profile, setProfile] = useState({ headline: "", bio: "", skills: "" });
   const logout = useLogout();
 
-  // Mock fetching jobs
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+  // ---------------- Fetch jobs from backend ----------------
   useEffect(() => {
-    if (activePage === "home") {
-      setJobs([
-        { id: '1', title: 'Frontend Developer', description: 'Looking for a React dev for a 2-week project.', poster: 'TechCorp', location: 'Nairobi' },
-        { id: '2', title: 'Graphic Designer', description: 'Create marketing materials.', poster: 'DesignStudio', location: 'Mombasa' },
-        { id: '3', title: 'Content Writer', description: 'Write 10 blog posts about tech topics.', poster: 'BlogHub', location: 'Remote' },
-      ]);
+    if (activePage === "home" || activePage === "applied") {
+      const fetchJobs = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(`${API_URL}/api/jobs/available`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          setJobs(data.jobs || []);
+        } catch (err) {
+          console.error("Error fetching jobs:", err);
+        }
+      };
+      fetchJobs();
     }
   }, [activePage]);
 
@@ -51,9 +65,13 @@ export default function SeekerDashboardPage() {
               <form
                 onSubmit={async (e) => {
                   e.preventDefault();
-                  await fetch("/api/seeker/profile", {
+                  const token = localStorage.getItem("token");
+                  await fetch(`${API_URL}/api/seeker/profile`, {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
                     body: JSON.stringify(profile),
                   });
                   alert("Profile updated!");
@@ -88,16 +106,13 @@ export default function SeekerDashboardPage() {
           <Card>
             <CardTitle>Applied Jobs</CardTitle>
             <CardContent>
-              {appliedJobs.length === 0 ? (
+              {jobs.filter(j => j.applied).length === 0 ? (
                 <p>You haven’t applied for any jobs yet.</p>
               ) : (
                 <ul>
-                  {appliedJobs.map((id) => {
-                    const job = jobs.find(j => j.id === id);
-                    return job ? (
-                      <li key={id}>{job.title} at {job.poster} ({job.location})</li>
-                    ) : null;
-                  })}
+                  {jobs.filter(j => j.applied).map(job => (
+                    <li key={job._id}>{job.title} at {job.poster} ({job.location})</li>
+                  ))}
                 </ul>
               )}
             </CardContent>
@@ -145,7 +160,7 @@ export default function SeekerDashboardPage() {
             )}
 
             {filteredJobs.map((job) => (
-              <Card key={job.id}>
+              <Card key={job._id}>
                 <CardTitle>{job.title}</CardTitle>
                 <CardContent>
                   <p>{job.description}</p>
@@ -155,15 +170,39 @@ export default function SeekerDashboardPage() {
                 </CardContent>
                 <CardActions>
                   <Button
-                    onClick={() => {
-                      if (!appliedJobs.includes(job.id)) {
-                        setAppliedJobs([...appliedJobs, job.id]);
+                    disabled={job.applied}
+                    onClick={async () => {
+                      if (job.applied) return;
+
+                      const bid = prompt("Your bid or proposed salary:");
+                      if (!bid) return;
+
+                      try {
+                        const token = localStorage.getItem("token");
+                        const res = await fetch(`${API_URL}/api/jobs/${job._id}/apply`, {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ bid }),
+                        });
+
+                        if (!res.ok) throw new Error("Failed to apply");
+
+                        // Update frontend immediately
+                        setJobs(jobs.map(j =>
+                          j._id === job._id ? { ...j, applied: true } : j
+                        ));
+
                         alert("Applied successfully!");
+                      } catch (err) {
+                        console.error(err);
+                        alert("Failed to apply. Try again.");
                       }
                     }}
-                    disabled={appliedJobs.includes(job.id)}
                   >
-                    {appliedJobs.includes(job.id) ? "Applied" : "Apply"}
+                    {job.applied ? "Applied" : "Apply"}
                   </Button>
                 </CardActions>
               </Card>
@@ -176,7 +215,6 @@ export default function SeekerDashboardPage() {
   // ---------------- MAIN RETURN ----------------
   return (
     <DashboardWrapper>
-      {/* Sidebar */}
       <Sidebar>
         <SidebarLink as="button" $active={activePage === "home"} onClick={() => setActivePage("home")}>
           Home
@@ -208,7 +246,6 @@ export default function SeekerDashboardPage() {
         </button>
       </Sidebar>
 
-      {/* Main Content */}
       <MainContent>{renderPage()}</MainContent>
     </DashboardWrapper>
   );
