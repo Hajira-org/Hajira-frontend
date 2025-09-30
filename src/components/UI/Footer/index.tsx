@@ -80,7 +80,7 @@ const Footer = () => {
             </Translator>
             <CopyRight>
               <Image src={ic_copyright} alt="copyright svg" />
-              Raft Corp, LLC.
+              Hajira - Org, LLC.
             </CopyRight>
           </FooterBottom>
         </FooterMainContent>

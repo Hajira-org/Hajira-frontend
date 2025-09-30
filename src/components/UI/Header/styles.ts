@@ -111,10 +111,11 @@ export const CallToActions = styled.div`
 
   @media (max-width: 768px) {
     position: absolute;
-    top: 220px;
+    top: 240px;
     z-index: 3;
-    right: 50px;
+    right: 30px;
     visibility: hidden;
+    gap: 1.8rem;
     opacity: 0;
     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transition-delay: 0.5s;
