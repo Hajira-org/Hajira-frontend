@@ -33,7 +33,7 @@ export default function SeekerDashboardPage() {
   const [profile, setProfile] = useState({ headline: "", bio: "", skills: "" });
   const logout = useLogout();
 
-  const API_URL = "http://localhost:4000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
   // ---------------- Fetch jobs from backend ----------------
   useEffect(() => {
