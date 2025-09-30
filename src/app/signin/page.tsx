@@ -44,9 +44,17 @@ export default function SigninPage() {
 
         toast.success('Login successful! 🎉');
 
-        // Redirect based on role
-        if (data.user?.role === 'poster') router.push('/poster/dashboard');
-        else router.push('/dashboard');
+        console.log('Logged in role:', data.user?.role);
+
+        if (data.user?.role?.toLowerCase() === 'poster') {
+          router.push('/poster/dashboard');
+        } else if (data.user?.role?.toLowerCase() === 'seeker') {
+          router.push('/dashboard');
+        } else {
+          toast.error('Role not recognized, cannot redirect');
+        }
+
+
       }
     } catch (err) {
       console.error(err);

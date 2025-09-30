@@ -16,7 +16,7 @@ import {
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_URL = "http://localhost:4000";
 
 export default function PosterDashboardPage() {
   const [activePage, setActivePage] = useState("home");
@@ -146,6 +146,7 @@ export default function PosterDashboardPage() {
                         : [],
                     }),
                   });
+                  
 
                   const data = await res.json();
 

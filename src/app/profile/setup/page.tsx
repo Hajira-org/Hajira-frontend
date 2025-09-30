@@ -141,8 +141,8 @@ const Button = styled.button<ButtonProps>`
     disabled
       ? "#374151"
       : variant === "secondary"
-      ? "rgba(255,255,255,0.1)"
-      : "linear-gradient(90deg, #3b82f6, #06b6d4)"};
+        ? "rgba(255,255,255,0.1)"
+        : "linear-gradient(90deg, #3b82f6, #06b6d4)"};
 
   color: ${({ variant, disabled }) =>
     disabled ? "#9ca3af" : variant === "secondary" ? "#f9fafb" : "#fff"};
@@ -315,26 +315,26 @@ export default function ProfileSetupPage() {
       const payload =
         form.role === "seeker"
           ? {
-              role: form.role,
-              seeker: {
-                age: Number(form.age),
-                skills: form.skills,
-                bio: form.bio,
-                location: form.location,
-              },
-            }
+            role: form.role,
+            seeker: {
+              age: Number(form.age),
+              skills: form.skills,
+              bio: form.bio,
+              location: form.location,
+            },
+          }
           : {
-              role: form.role,
-              poster: {
-                company: form.company,
-                category: form.category,
-                bio: form.bio,
-                location: form.location,
-              },
-            };
+            role: form.role,
+            poster: {
+              company: form.company,
+              category: form.category,
+              bio: form.bio,
+              location: form.location,
+            },
+          };
 
       const res = await axios.post(
-        "http://localhost:4000/api/auth/setup",
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/setup`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
