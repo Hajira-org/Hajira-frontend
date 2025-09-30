@@ -13,6 +13,7 @@ export const PageWrapper = styled.div`
   background: #0f172a;
   color: #fff;
 
+  /* Mobile responsiveness */
   @media (max-width: 768px) {
     flex-direction: column;
     height: auto;
@@ -23,7 +24,7 @@ export const PageWrapper = styled.div`
    Left Image Panel
 ======================== */
 export const LeftPanel = styled.div`
-  flex: 1;
+  flex: 1; /* takes half screen */
   position: relative;
 
   img {
@@ -38,6 +39,7 @@ export const LeftPanel = styled.div`
 
     img {
       height: 100%;
+      object-fit: cover;
     }
   }
 `;
@@ -108,8 +110,8 @@ export const InputGroup = styled.div`
 
   @media (max-width: 768px) {
     .icon {
-      font-size: 0.9rem;
       left: 0.8rem;
+      font-size: 0.9rem;
     }
   }
 `;
@@ -216,4 +218,140 @@ export const GoogleButton = styled(Button)`
   &:hover {
     background: #f3f4f6;
   }
+
+  @media (max-width: 768px) {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.95rem;
+  }
+`;
+
+/* ========================
+   Page Container / Card Actions
+======================== */
+export const PageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  padding: 2rem;
+  background-color: #f9f9f9;
+`;
+
+export const CardActions = styled.div`
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+`;
+
+/* ========================
+   Dashboard Layout
+======================== */
+export const DashboardWrapper = styled.div`
+  display: flex;
+  min-height: 100vh;
+  gap: 1rem;
+  background: #0f172a;
+  color: #fff;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+  }
+`;
+
+/* Sidebar container */
+export const Sidebar = styled.div`
+  width: 240px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @media (max-width: 1024px) {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 1rem;
+    border-radius: 0;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
+/* Individual sidebar link */
+export const SidebarLink = styled.a<{ $active?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+
+  color: ${({ $active }) => ($active ? "#111827" : "#9ca3af")};
+  background: ${({ $active }) => ($active ? "#f0fdf4" : "transparent")};
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: #f9fafb;
+    color: #111827;
+  }
+
+  ${({ $active }) =>
+    $active &&
+    `
+    box-shadow: inset 3px 0 0 #22c55e;
+  `}
+`;
+
+/* Main content area */
+export const MainContent = styled.div`
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  @media (max-width: 1024px) {
+    padding: 1rem;
+  }
+`;
+
+/* Dashboard card */
+export const Card = styled.div`
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+  }
+`;
+
+/* Card title */
+export const CardTitle = styled.h3`
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #22c55e;
+`;
+
+/* Card content */
+export const CardContent = styled.p`
+  font-size: 1rem;
+  color: #e5e7eb;
 `;
