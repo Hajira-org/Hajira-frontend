@@ -17,7 +17,7 @@ export const desktopBriefNotePhrase = [
 
 
 // For mobile
-export const mobileHeaderPhrase = ['Your Financial', 'Freedom, Your Way'];
+export const mobileHeaderPhrase = ['Your microjobs done', 'in a click'];
 export const mobileParagraphPhrase = [
   'We believe that hiring available individuals should be',
   "effortless and cost-effective. That's why we offer",
