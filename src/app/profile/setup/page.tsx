@@ -480,7 +480,7 @@ export default function ProfileSetupPage() {
                     style={{ marginTop: "0.8rem" }}
                     onClick={handleAddCustomSkill}
                   >
-                    + Add "{form.skillSearch}"
+                    + Add  &quot;{form.skillSearch} &quot;
                   </Button>
                 )}
             </Field>
