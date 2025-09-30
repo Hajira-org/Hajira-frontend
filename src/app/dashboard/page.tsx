@@ -107,7 +107,7 @@ export default function SeekerDashboardPage() {
             <CardTitle>Applied Jobs</CardTitle>
             <CardContent>
               {jobs.filter(j => j.applied).length === 0 ? (
-                <p>You haven’t applied for any jobs yet.</p>
+                <p>You have not applied for any jobs yet.</p>
               ) : (
                 <ul>
                   {jobs.filter(j => j.applied).map(job => (
