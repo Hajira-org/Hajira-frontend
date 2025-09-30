@@ -1,0 +1,175 @@
+/* page.module.css */
+.wizardContainer {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a, #1e293b, #0f172a);
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  .wizardContent {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .brandIcon {
+    width: 2rem;
+    height: 2rem;
+    background: #3b82f6;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .brandName {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+  
+  .mainCard {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(20px);
+    border-radius: 1rem;
+    border: 1px solid #374151;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+  
+  .cardInner {
+    padding: 2rem;
+  }
+  
+  .roleSelection {
+    padding: 2rem 0;
+  }
+  
+  .roleHeader {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  
+  .roleHeader h2 {
+    font-size: 1.875rem;
+    font-weight: bold;
+    margin: 0 0 1rem 0;
+  }
+  
+  .roleHeader p {
+    font-size: 1.125rem;
+    color: #cbd5e1;
+    margin: 0;
+  }
+  
+  .roleCards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+  
+  .roleCard {
+    position: relative;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    padding: 2rem;
+    border-radius: 1rem;
+    border: 1px solid #475569;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .roleCard:hover {
+    transform: scale(1.05);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+  
+  .seekerCard:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.2);
+  }
+  
+  .posterCard:hover {
+    border-color: #10b981;
+    box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.2);
+  }
+  
+  .iconContainer {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .seekerIcon {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+  }
+  
+  .posterIcon {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+  }
+  
+  .roleCard h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0 0 1rem 0;
+  }
+  
+  .roleCard p {
+    color: #cbd5e1;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  
+  .featureList {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+  }
+  
+  .featureList li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: #94a3b8;
+  }
+  
+  .featureList li svg {
+    color: #22c55e;
+  }
+  
+  .getStarted {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    transition: transform 0.3s ease;
+  }
+  
+  .seekerCta {
+    color: #60a5fa;
+  }
+  
+  .posterCta {
+    color: #34d399;
+  }
+  
+  .roleCard:hover .getStarted {
+    transform: translateX(0.5rem);
+  }
