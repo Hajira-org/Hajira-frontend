@@ -52,7 +52,7 @@ export default function SeekerDashboardPage() {
       };
       fetchJobs();
     }
-  }, [activePage]);
+  }, [activePage, API_URL]);
 
   // ---------------- RENDER PAGES ----------------
   const renderPage = () => {

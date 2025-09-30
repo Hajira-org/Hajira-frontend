@@ -233,7 +233,7 @@ export default function PosterDashboardPage() {
               <Card>
                 <CardTitle>No Jobs Yet</CardTitle>
                 <CardContent>
-                  Click "Create Job" in the sidebar to post your first job.
+                  Click &quot;Create Job&quot; in the sidebar to post your first job.
                 </CardContent>
               </Card>
             )}
