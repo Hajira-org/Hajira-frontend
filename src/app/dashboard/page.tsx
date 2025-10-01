@@ -13,17 +13,24 @@ import {
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
 
+// ---------------- Types ----------------
+interface Poster {
+  _id: string;
+  name: string;
+  email?: string;
+}
+
 interface Job {
   _id: string;
   title: string;
   description: string;
-  poster: string;
+  poster: Poster; // Poster object
   location: string;
   requirements?: string[];
   salary?: string;
   workModel?: string;
   status?: string;
-  applied?: boolean; // ✅ whether the current user applied
+  applied?: boolean;
 }
 
 export default function SeekerDashboardPage() {
@@ -33,28 +40,29 @@ export default function SeekerDashboardPage() {
   const [profile, setProfile] = useState({ headline: "", bio: "", skills: "" });
   const logout = useLogout();
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // ---------------- Fetch jobs from backend ----------------
+  const fetchJobs = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/jobs/available`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setJobs(data.jobs || []);
+    } catch (err) {
+      console.error("Error fetching jobs:", err);
+    }
+  };
+
   useEffect(() => {
     if (activePage === "home" || activePage === "applied") {
-      const fetchJobs = async () => {
-        try {
-          const token = localStorage.getItem("token");
-          const res = await fetch(`${API_URL}/api/jobs/available`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await res.json();
-          setJobs(data.jobs || []);
-        } catch (err) {
-          console.error("Error fetching jobs:", err);
-        }
-      };
       fetchJobs();
     }
-  }, [activePage, API_URL]);
+  }, [activePage]);
 
-  // ---------------- RENDER PAGES ----------------
+  // ---------------- Render pages ----------------
   const renderPage = () => {
     switch (activePage) {
       case "profile":
@@ -107,11 +115,13 @@ export default function SeekerDashboardPage() {
             <CardTitle>Applied Jobs</CardTitle>
             <CardContent>
               {jobs.filter(j => j.applied).length === 0 ? (
-                <p>You have not applied for any jobs yet.</p>
+                <p>You have not applied for any jobs yet or the jobs have been completed.</p>
               ) : (
                 <ul>
                   {jobs.filter(j => j.applied).map(job => (
-                    <li key={job._id}>{job.title} at {job.poster} ({job.location})</li>
+                    <li key={job._id}>
+                      {job.title} at {job.poster?.name || "Unknown"} ({job.location})
+                    </li>
                   ))}
                 </ul>
               )}
@@ -130,53 +140,100 @@ export default function SeekerDashboardPage() {
         );
 
       default:
+        // ✅ Filter jobs using poster.name safely
         const filteredJobs = jobs.filter(job =>
           job.title.toLowerCase().includes(search.toLowerCase()) ||
           job.description.toLowerCase().includes(search.toLowerCase()) ||
-          job.poster.toLowerCase().includes(search.toLowerCase()) ||
+          (job.poster?.name || "").toLowerCase().includes(search.toLowerCase()) ||
           job.location.toLowerCase().includes(search.toLowerCase())
         );
 
         return (
           <>
-            <div style={{ marginBottom: '1.5rem' }}>
+            {/* Search + Refresh */}
+            <div style={{ marginBottom: '1.5rem', display: "flex", gap: "0.5rem" }}>
               <input
                 type="text"
-                placeholder="Search jobs..."
+                placeholder="Search jobs, tags, or location..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{
-                  width: '100%',
+                  flex: 1,
                   padding: '0.8rem 1rem',
                   borderRadius: '0.5rem',
-                  border: '1px solid #cbd5e1',
-                  marginBottom: '1rem'
+                  border: '1px solid #cbd5e1'
                 }}
               />
+              <button
+                onClick={fetchJobs}
+                style={{
+                  padding: "0.8rem 1rem",
+                  borderRadius: "0.5rem",
+                  border: "none",
+                  backgroundColor: "#3b82f6",
+                  color: "#fff",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Refresh
+              </button>
             </div>
 
             {filteredJobs.length === 0 && (
               <p style={{ color: '#94a3b8', textAlign: 'center' }}>No jobs found.</p>
             )}
 
-            {filteredJobs.map((job) => (
-              <Card key={job._id}>
-                <CardTitle>{job.title}</CardTitle>
-                <CardContent>
-                  <p>{job.description}</p>
-                  <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
-                    Posted by: {job.poster} | Location: {job.location}
+            {filteredJobs.map(job => (
+              <Card key={job._id} style={{
+                backgroundColor: "#1e293b",
+                color: "#f1f5f9",
+                borderRadius: "0.75rem",
+                padding: "1rem 1.25rem",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.5)"
+              }}>
+                <CardTitle style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+                  {job.title}
+                </CardTitle>
+
+                <CardContent style={{ marginBottom: "1rem" }}>
+                  <p style={{ color: "#cbd5e1", marginBottom: "0.5rem" }}>{job.description}</p>
+                  <p style={{ fontSize: "0.9rem", color: "#94a3b8" }}>
+                    👤 {job.poster?.name || "Unknown"} • 📍 {job.location}
                   </p>
+                  {job.salary && (
+                    <p style={{ fontSize: "0.9rem", color: "#38bdf8", marginTop: "0.3rem" }}>💰 {job.salary}</p>
+                  )}
+                  {job.workModel && (
+                    <span style={{
+                      display: "inline-block",
+                      backgroundColor: "#334155",
+                      color: "#f1f5f9",
+                      fontSize: "0.75rem",
+                      padding: "0.25rem 0.5rem",
+                      borderRadius: "0.4rem",
+                      marginTop: "0.5rem"
+                    }}>
+                      {job.workModel}
+                    </span>
+                  )}
                 </CardContent>
-                <CardActions>
+
+                <CardActions style={{ display: "flex", gap: "0.5rem" }}>
                   <Button
+                    style={{
+                      backgroundColor: job.applied ? "#475569" : "#3b82f6",
+                      color: "#fff",
+                      padding: "0.5rem 1rem",
+                      borderRadius: "0.5rem",
+                      fontWeight: 600,
+                      cursor: job.applied ? "not-allowed" : "pointer",
+                    }}
                     disabled={job.applied}
                     onClick={async () => {
                       if (job.applied) return;
-
                       const bid = prompt("Your bid or proposed salary:");
                       if (!bid) return;
-
                       try {
                         const token = localStorage.getItem("token");
                         const res = await fetch(`${API_URL}/api/jobs/${job._id}/apply`, {
@@ -187,14 +244,8 @@ export default function SeekerDashboardPage() {
                           },
                           body: JSON.stringify({ bid }),
                         });
-
                         if (!res.ok) throw new Error("Failed to apply");
-
-                        // Update frontend immediately
-                        setJobs(jobs.map(j =>
-                          j._id === job._id ? { ...j, applied: true } : j
-                        ));
-
+                        setJobs(jobs.map(j => j._id === job._id ? { ...j, applied: true } : j));
                         alert("Applied successfully!");
                       } catch (err) {
                         console.error(err);
@@ -202,7 +253,7 @@ export default function SeekerDashboardPage() {
                       }
                     }}
                   >
-                    {job.applied ? "Applied" : "Apply"}
+                    {job.applied ? "✔️ Applied" : "Apply Now"}
                   </Button>
                 </CardActions>
               </Card>
@@ -216,32 +267,21 @@ export default function SeekerDashboardPage() {
   return (
     <DashboardWrapper>
       <Sidebar>
-        <SidebarLink as="button" $active={activePage === "home"} onClick={() => setActivePage("home")}>
-          Home
-        </SidebarLink>
-        <SidebarLink as="button" $active={activePage === "profile"} onClick={() => setActivePage("profile")}>
-          Profile
-        </SidebarLink>
-        <SidebarLink as="button" $active={activePage === "applied"} onClick={() => setActivePage("applied")}>
-          Applied Jobs
-        </SidebarLink>
-        <SidebarLink as="button" $active={activePage === "settings"} onClick={() => setActivePage("settings")}>
-          Settings
-        </SidebarLink>
+        <SidebarLink as="button" $active={activePage === "home"} onClick={() => setActivePage("home")}>Home</SidebarLink>
+        <SidebarLink as="button" $active={activePage === "profile"} onClick={() => setActivePage("profile")}>Profile</SidebarLink>
+        <SidebarLink as="button" $active={activePage === "applied"} onClick={() => setActivePage("applied")}>Applied Jobs</SidebarLink>
+        <SidebarLink as="button" $active={activePage === "settings"} onClick={() => setActivePage("settings")}>Settings</SidebarLink>
 
-        <button
-          onClick={logout}
-          style={{
-            marginTop: 'auto',
-            padding: '0.5rem 1rem',
-            backgroundColor: '#ef4444',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '0.5rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
+        <button onClick={logout} style={{
+          marginTop: 'auto',
+          padding: '0.5rem 1rem',
+          backgroundColor: '#ef4444',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '0.5rem',
+          fontWeight: 600,
+          cursor: 'pointer',
+        }}>
           Logout
         </button>
       </Sidebar>

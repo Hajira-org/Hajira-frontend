@@ -13,6 +13,7 @@ import {
   Button,
   FormContainer,
   InputGroup,
+  CardActions,
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
 
@@ -31,28 +32,26 @@ export default function PosterDashboardPage() {
   });
   const [profile, setProfile] = useState({ company: "", about: "", logo: "" });
   const [showApplicantsMap, setShowApplicantsMap] = useState<Record<string, boolean>>({});
+  const [search, setSearch] = useState('');
   const logout = useLogout();
 
   // ---------------- FETCH JOBS ----------------
+  const fetchJobs = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/jobs`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setJobs(data.jobs || []);
+    } catch (err) {
+      console.error("Error fetching jobs:", err);
+    }
+  };
+
   useEffect(() => {
     if (activePage === "home" || activePage === "myJobs") {
-      const token = localStorage.getItem("token");
-
-      const fetchJobs = async () => {
-        try {
-          const res = await fetch(`${API_URL}/api/jobs`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await res.json();
-          setJobs(data.jobs || []);
-        } catch (err) {
-          console.error("Error fetching jobs:", err);
-        }
-      };
-
       fetchJobs();
-
-      // Optional: Polling every 5s for new applications
       const interval = setInterval(fetchJobs, 5000);
       return () => clearInterval(interval);
     }
@@ -146,7 +145,6 @@ export default function PosterDashboardPage() {
                         : [],
                     }),
                   });
-                  
 
                   const data = await res.json();
 
@@ -227,106 +225,158 @@ export default function PosterDashboardPage() {
       // ---------------- MY JOBS & HOME ----------------
       case "home":
       case "myJobs":
+        const filteredJobs = jobs.filter(job =>
+          job.title.toLowerCase().includes(search.toLowerCase()) ||
+          job.description.toLowerCase().includes(search.toLowerCase()) ||
+          job.location.toLowerCase().includes(search.toLowerCase())
+        );
+
         return (
           <>
-            {jobs.length === 0 && (
-              <Card>
-                <CardTitle>No Jobs Yet</CardTitle>
-                <CardContent>
-                  Click &quot;Create Job&quot; in the sidebar to post your first job.
-                </CardContent>
-              </Card>
+            {/* Search bar */}
+            <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem' }}>
+              <input
+                type="text"
+                placeholder="Search jobs, location..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '0.8rem 1rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+              <button
+                onClick={fetchJobs}
+                style={{
+                  padding: "0.8rem 1rem",
+                  borderRadius: "0.5rem",
+                  border: "none",
+                  backgroundColor: "#3b82f6",
+                  color: "#fff",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Refresh
+              </button>
+            </div>
+
+            {filteredJobs.length === 0 && (
+              <p style={{ color: '#94a3b8', textAlign: 'center' }}>No jobs found.</p>
             )}
 
-            {jobs.map((job) => (
-              <Card key={job._id}>
-                <CardTitle>
-                  {job.title}{" "}
+            {filteredJobs.map(job => (
+              <Card key={job._id} style={{
+                backgroundColor: "#1e293b",
+                color: "#f1f5f9",
+                borderRadius: "0.75rem",
+                padding: "1rem 1.25rem",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.5)"
+              }}>
+                <CardTitle style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+                  {job.title}
                   {job.applications?.length > 0 && (
-                    <span style={{ fontSize: "0.8rem", color: "#555", marginLeft: "0.5rem" }}>
+                    <span style={{ fontSize: "0.8rem", color: "#94a3b8", marginLeft: "0.5rem" }}>
                       ({job.applications.length} applicants)
                     </span>
                   )}
                 </CardTitle>
-                <CardContent>
-                  <p>{job.description}</p>
-                  <p><strong>Location:</strong> {job.location}</p>
-                  <p><strong>Salary:</strong> {job.salary}</p>
-                  <p><strong>Work Model:</strong> {job.workModel}</p>
-                  <ul>
-                    {job.requirements?.map((req: string, i: number) => (
-                      <li key={i}>{req}</li>
-                    ))}
-                  </ul>
 
-                  {job.applications?.length > 0 && (
-                    <div style={{ marginTop: "1rem" }}>
-                      <Button
-                        type="button"
-                        onClick={() => toggleApplicants(job._id)}
-                        style={{ marginBottom: "0.5rem" }}
-                      >
-                        {showApplicantsMap[job._id] ? "Hide Applicants" : "View Applicants"}
-                      </Button>
-
-                      {showApplicantsMap[job._id] && (
-                        <ul>
-                          {job.applications.map((app: any, i: number) => (
-                            <li key={i}>
-                              {app.applicant.name} applied with bid: {app.bid}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
+                <CardContent style={{ marginBottom: "1rem" }}>
+                  <p style={{ color: "#cbd5e1", marginBottom: "0.5rem" }}>{job.description}</p>
+                  <p style={{ fontSize: "0.9rem", color: "#94a3b8" }}>
+                    📍 {job.location}
+                  </p>
+                  {job.salary && (
+                    <p style={{ fontSize: "0.9rem", color: "#38bdf8", marginTop: "0.3rem" }}>
+                      💰 {job.salary}
+                    </p>
                   )}
-
-                  {/* Edit/Delete buttons only on myJobs */}
-                  {activePage === "myJobs" && (
-                    <div style={{ marginTop: "1rem" }}>
-                      <Button
-                        type="button"
-                        onClick={async () => {
-                          const newTitle = prompt("New title", job.title);
-                          if (!newTitle) return;
-                          const token = localStorage.getItem("token");
-
-                          await fetch(`${API_URL}/api/jobs/${job._id}`, {
-                            method: "PUT",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ title: newTitle }),
-                          });
-
-                          setJobs(jobs.map(j =>
-                            j._id === job._id ? { ...j, title: newTitle } : j
-                          ));
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        type="button"
-                        style={{ marginLeft: "0.5rem", background: "#ef4444" }}
-                        onClick={async () => {
-                          const token = localStorage.getItem("token");
-
-                          await fetch(`${API_URL}/api/jobs/${job._id}`, {
-                            method: "DELETE",
-                            headers: { Authorization: `Bearer ${token}` },
-                          });
-
-                          setJobs(jobs.filter(j => j._id !== job._id));
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </div>
+                  {job.workModel && (
+                    <span style={{
+                      display: "inline-block",
+                      backgroundColor: "#334155",
+                      color: "#f1f5f9",
+                      fontSize: "0.75rem",
+                      padding: "0.25rem 0.5rem",
+                      borderRadius: "0.4rem",
+                      marginTop: "0.5rem"
+                    }}>
+                      {job.workModel}
+                    </span>
                   )}
-
                 </CardContent>
+
+                {/* Applicants */}
+                {job.applications?.length > 0 && (
+                  <div style={{ marginBottom: "0.75rem" }}>
+                    <Button
+                      type="button"
+                      onClick={() => toggleApplicants(job._id)}
+                      style={{ marginBottom: "0.5rem" }}
+                    >
+                      {showApplicantsMap[job._id] ? "Hide Applicants" : "View Applicants"}
+                    </Button>
+
+                    {showApplicantsMap[job._id] && (
+                      <ul style={{ paddingLeft: "1.2rem", color: "#cbd5e1" }}>
+                        {job.applications.map((app: any, i: number) => (
+                          <li key={i}>
+                            {app.applicant.name} applied with bid: {app.bid}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                {/* Edit/Delete buttons */}
+                {activePage === "myJobs" && (
+                  <CardActions style={{ display: "flex", gap: "0.5rem" }}>
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        const newTitle = prompt("New title", job.title);
+                        if (!newTitle) return;
+                        const token = localStorage.getItem("token");
+
+                        await fetch(`${API_URL}/api/jobs/${job._id}`, {
+                          method: "PUT",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ title: newTitle }),
+                        });
+
+                        setJobs(jobs.map(j =>
+                          j._id === job._id ? { ...j, title: newTitle } : j
+                        ));
+                      }}
+                      style={{ backgroundColor: "#3b82f6" }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      style={{ backgroundColor: "#ef4444" }}
+                      onClick={async () => {
+                        const token = localStorage.getItem("token");
+
+                        await fetch(`${API_URL}/api/jobs/${job._id}`, {
+                          method: "DELETE",
+                          headers: { Authorization: `Bearer ${token}` },
+                        });
+
+                        setJobs(jobs.filter(j => j._id !== job._id));
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </CardActions>
+                )}
               </Card>
             ))}
           </>
@@ -359,45 +409,11 @@ export default function PosterDashboardPage() {
   return (
     <DashboardWrapper>
       <Sidebar>
-        <SidebarLink
-          as="button"
-          $active={activePage === "home"}
-          onClick={() => setActivePage("home")}
-        >
-          Home
-        </SidebarLink>
-
-        <SidebarLink
-          as="button"
-          $active={activePage === "profile"}
-          onClick={() => setActivePage("profile")}
-        >
-          Profile
-        </SidebarLink>
-
-        <SidebarLink
-          as="button"
-          $active={activePage === "createJob"}
-          onClick={() => setActivePage("createJob")}
-        >
-          Create Job
-        </SidebarLink>
-
-        <SidebarLink
-          as="button"
-          $active={activePage === "myJobs"}
-          onClick={() => setActivePage("myJobs")}
-        >
-          My Jobs
-        </SidebarLink>
-
-        <SidebarLink
-          as="button"
-          $active={activePage === "settings"}
-          onClick={() => setActivePage("settings")}
-        >
-          Settings
-        </SidebarLink>
+        <SidebarLink as="button" $active={activePage === "home"} onClick={() => setActivePage("home")}>Home</SidebarLink>
+        <SidebarLink as="button" $active={activePage === "profile"} onClick={() => setActivePage("profile")}>Profile</SidebarLink>
+        <SidebarLink as="button" $active={activePage === "createJob"} onClick={() => setActivePage("createJob")}>Create Job</SidebarLink>
+        <SidebarLink as="button" $active={activePage === "myJobs"} onClick={() => setActivePage("myJobs")}>My Jobs</SidebarLink>
+        <SidebarLink as="button" $active={activePage === "settings"} onClick={() => setActivePage("settings")}>Settings</SidebarLink>
 
         <Button
           type="button"
