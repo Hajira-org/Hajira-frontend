@@ -51,19 +51,24 @@ The platform focuses on **trust, safety, and accessibility** while enabling secu
 > Replace `assets/screenshots/...` with actual image paths once you capture them.
 
 - **Landing Page**  
-  ![Landing Page](assets/screenshots/landing.png)
+![Screenshot (191)](https://github.com/user-attachments/assets/68fbdd00-76c1-4201-b29c-d1a286640219)
+
 
 - **Authentication (Sign In / Sign Up)**  
-  ![Auth](assets/screenshots/auth.png)
+![Screenshot (201)](https://github.com/user-attachments/assets/2c013aed-2fcb-4d6a-a5ba-20abd7f001dd)
+
 
 - **Job Posting**  
-  ![Job Posting](assets/screenshots/job-post.png)
+![Screenshot (202)](https://github.com/user-attachments/assets/bef134c9-8059-46d9-a042-324bec089bea)
+![Screenshot (203)](https://github.com/user-attachments/assets/99946e10-9c5b-429c-bd13-22fad256b9f4)
 
-- **User Profile**  
-  ![Profile](assets/screenshots/profile.png)
 
-- **Admin Dashboard**  
-  ![Admin Dashboard](assets/screenshots/admin.png)
+- **Job Seekers Dashboard**  
+
+  ![Screenshot (205)](https://github.com/user-attachments/assets/dc73527c-68c9-4606-906d-d6bea93d29c2)
+
+- **Job Posters Dashboard**  
+ ![Screenshot (206)](https://github.com/user-attachments/assets/ee192140-84e0-48f4-ab42-3a865cd29170)
 
 ---
 
