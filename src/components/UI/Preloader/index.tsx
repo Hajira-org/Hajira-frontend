@@ -33,7 +33,7 @@ const Preloader = ({
     tl.to(spans.current, {
       y: '-100%', // Move the spans up
       ease: 'back.out(1.7)', // Easing function
-      duration: 1.4, // Animation duration
+      duration: 1, // Animation duration
       stagger: 0.05, // Stagger duration (0.2 seconds delay between each span)
     });
     // Animate both the wrapper and the second overlay almost at the same time
@@ -54,7 +54,7 @@ const Preloader = ({
       transformOrigin: 'top',
       ease: [0.83, 0, 0.17, 1] as any,
       duration: 1,
-      delay: -0.9, // Adjust this delay as needed to fine-tune the timing
+      delay: -0.7, // Adjust this delay as needed to fine-tune the timing
     });
   }, [setComplete]);
 
