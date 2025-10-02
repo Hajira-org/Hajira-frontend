@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🌍 Hajira — Micro-Job Platform
 
-## Getting Started
+Hajira is a **community-driven micro-job platform** where people can post or claim small, hyperlocal jobs (e.g., deliveries, tutoring, translation, repairs).  
+The platform focuses on **trust, safety, and accessibility** while enabling secure, small-scale transactions.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Vision
+- Empower local communities through micro-jobs  
+- Provide quick, reliable, and verified services  
+- Support individuals in finding work or helpers instantly  
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
+- **Frontend:** React / Next.js, Tailwind CSS  
+- **Backend:** Node.js, Express  
+- **Database:** MongoDB  
+- **Authentication:** JWT / OAuth2 (Google login planned)  
+- **Hosting:** Netlify (frontend), Render / Vercel (backend)  
+- **Maps:** Leaflet.js / Google Maps API (locator system)  
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+---
 
-## Learn More
+## ✅ Completed Features
+- 🔑 **Authentication** (Sign In / Sign Up)  
+- 🗄️ **Database setup (MongoDB)**  
+- 📝 **Job posting & browsing**  
+- 👤 **User profiles**  
+- 🛠️ **Admin dashboard**  
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔄 In Progress
+- 📩 **Job application flow**  
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🔲 Pending Features
+- ⭐ **Ratings & reviews**  
+- 🛡️ **Safety & reporting system**  
+- 📍 **Locator system (map integration)**  
+- 🔔 **Push notifications (optional)**  
+- 💳 **Payment integration (future roadmap)**  
+- ✏️ **Account modifications (profile edits, password reset, preferences)**  
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## 📸 Screenshots
+
+> Replace `assets/screenshots/...` with actual image paths once you capture them.
+
+- **Landing Page**  
+  ![Landing Page](assets/screenshots/landing.png)
+
+- **Authentication (Sign In / Sign Up)**  
+  ![Auth](assets/screenshots/auth.png)
+
+- **Job Posting**  
+  ![Job Posting](assets/screenshots/job-post.png)
+
+- **User Profile**  
+  ![Profile](assets/screenshots/profile.png)
+
+- **Admin Dashboard**  
+  ![Admin Dashboard](assets/screenshots/admin.png)
+
+---
+
+## 📅 Roadmap (Phase-wise)
+
+### Phase 1: Foundations (✅ Completed)
+- Landing page setup  
+- Logo branding (Hajira logo)  
+- Authentication  
+- Database setup  
+
+### Phase 2: Core Features (⏳ In Progress)
+- User profiles  
+- Job posting & browsing  
+- Job application flow  
+
+### Phase 3: Enhancements (🔲 Pending)
+- Ratings & reviews  
+- Safety & reporting  
+- Admin dashboard  
+
+### Phase 4: Advanced Features (🔲 Pending)
+- Locator system (map integration)  
+- Push notifications (optional)  
+- Payment integration (future)  
+
+---
+
+## 🤝 Contributing
+Pull requests are welcome! For major changes, please open an issue first to discuss what you’d like to change.
+
+---
+
+## 📜 License
+[MIT License](LICENSE)
+
