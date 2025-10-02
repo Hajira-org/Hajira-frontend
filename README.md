@@ -1,18 +1,18 @@
-# 🌍 Hajira — Micro-Job Platform
+#  Hajira — A local Micro-Job Platform
 
-Hajira is a **community-driven micro-job platform** where people can post or claim small, hyperlocal jobs (e.g., deliveries, tutoring, translation, repairs).  
-The platform focuses on **trust, safety, and accessibility** while enabling secure, small-scale transactions.
+Hajira is an African **community-driven micro-job platform** where people can post or claim small, hyperlocal jobs (e.g., deliveries, tutoring, translation, repairs).  
+The platform focuses on **trust, safety, and accessibility** while enabling secure, small-scale transactions. 
 
 ---
 
-## 🚀 Vision
+## Our Vision
 - Empower local communities through micro-jobs  
 - Provide quick, reliable, and verified services  
 - Support individuals in finding work or helpers instantly  
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 - **Frontend:** React / Next.js, Tailwind CSS  
 - **Backend:** Node.js, Express  
 - **Database:** MongoDB  
@@ -22,33 +22,8 @@ The platform focuses on **trust, safety, and accessibility** while enabling secu
 
 ---
 
-## ✅ Completed Features
-- 🔑 **Authentication** (Sign In / Sign Up)  
-- 🗄️ **Database setup (MongoDB)**  
-- 📝 **Job posting & browsing**  
-- 👤 **User profiles**  
-- 🛠️ **Admin dashboard**  
+## Screenshots
 
----
-
-## 🔄 In Progress
-- 📩 **Job application flow**  
-
----
-
-## 🔲 Pending Features
-- ⭐ **Ratings & reviews**  
-- 🛡️ **Safety & reporting system**  
-- 📍 **Locator system (map integration)**  
-- 🔔 **Push notifications (optional)**  
-- 💳 **Payment integration (future roadmap)**  
-- ✏️ **Account modifications (profile edits, password reset, preferences)**  
-
----
-
-## 📸 Screenshots
-
-> Replace `assets/screenshots/...` with actual image paths once you capture them.
 
 - **Landing Page**  
 ![Screenshot (191)](https://github.com/user-attachments/assets/68fbdd00-76c1-4201-b29c-d1a286640219)
@@ -72,9 +47,9 @@ The platform focuses on **trust, safety, and accessibility** while enabling secu
 
 ---
 
-## 📅 Roadmap (Phase-wise)
+## Roadmap (Phase-wise)
 
-### Phase 1: Foundations (✅ Completed)
+### Phase 1: Foundations 
 - Landing page setup  
 - Logo branding (Hajira logo)  
 - Authentication  
