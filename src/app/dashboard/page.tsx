@@ -9,7 +9,10 @@ import {
   CardTitle,
   CardContent,
   CardActions,
-  Button
+  Button,
+  FormContainer,
+  InputGroup,
+  Input
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
 
@@ -24,7 +27,7 @@ interface Job {
   _id: string;
   title: string;
   description: string;
-  poster: Poster; // Poster object
+  poster: Poster;
   location: string;
   requirements?: string[];
   salary?: string;
@@ -65,12 +68,13 @@ export default function SeekerDashboardPage() {
   // ---------------- Render pages ----------------
   const renderPage = () => {
     switch (activePage) {
+      // ---------------- PROFILE ----------------
       case "profile":
         return (
           <Card>
             <CardTitle>Update Profile</CardTitle>
             <CardContent>
-              <form
+              <FormContainer
                 onSubmit={async (e) => {
                   e.preventDefault();
                   const token = localStorage.getItem("token");
@@ -82,33 +86,42 @@ export default function SeekerDashboardPage() {
                     },
                     body: JSON.stringify(profile),
                   });
-                  alert("Profile updated!");
+                  alert("Profile updated ✅");
                 }}
               >
-                <input
-                  placeholder="Headline"
-                  value={profile.headline}
-                  onChange={e => setProfile({ ...profile, headline: e.target.value })}
-                  style={{ width: "100%", marginBottom: "0.8rem" }}
-                />
-                <textarea
-                  placeholder="Bio"
-                  value={profile.bio}
-                  onChange={e => setProfile({ ...profile, bio: e.target.value })}
-                  style={{ width: "100%", marginBottom: "0.8rem" }}
-                />
-                <input
-                  placeholder="Skills (comma-separated)"
-                  value={profile.skills}
-                  onChange={e => setProfile({ ...profile, skills: e.target.value })}
-                  style={{ width: "100%", marginBottom: "0.8rem" }}
-                />
-                <button type="submit">Save Profile</button>
-              </form>
+                <InputGroup>
+                  <Input
+                    placeholder="Headline"
+                    value={profile.headline}
+                    onChange={e => setProfile({ ...profile, headline: e.target.value })}
+                  />
+                </InputGroup>
+
+                <InputGroup>
+                  <Input
+                    as="textarea"
+                    rows={3}
+                    placeholder="Bio"
+                    value={profile.bio}
+                    onChange={e => setProfile({ ...profile, bio: e.target.value })}
+                  />
+                </InputGroup>
+
+                <InputGroup>
+                  <Input
+                    placeholder="Skills (comma-separated)"
+                    value={profile.skills}
+                    onChange={e => setProfile({ ...profile, skills: e.target.value })}
+                  />
+                </InputGroup>
+
+                <Button type="submit">Save Profile</Button>
+              </FormContainer>
             </CardContent>
           </Card>
         );
 
+      // ---------------- APPLIED ----------------
       case "applied":
         return (
           <Card>
@@ -129,6 +142,7 @@ export default function SeekerDashboardPage() {
           </Card>
         );
 
+      // ---------------- SETTINGS ----------------
       case "settings":
         return (
           <Card>
@@ -139,8 +153,8 @@ export default function SeekerDashboardPage() {
           </Card>
         );
 
+      // ---------------- HOME / JOB LIST ----------------
       default:
-        // ✅ Filter jobs using poster.name safely
         const filteredJobs = jobs.filter(job =>
           job.title.toLowerCase().includes(search.toLowerCase()) ||
           job.description.toLowerCase().includes(search.toLowerCase()) ||
@@ -150,7 +164,6 @@ export default function SeekerDashboardPage() {
 
         return (
           <>
-            {/* Search + Refresh */}
             <div style={{ marginBottom: '1.5rem', display: "flex", gap: "0.5rem" }}>
               <input
                 type="text"
@@ -272,18 +285,13 @@ export default function SeekerDashboardPage() {
         <SidebarLink as="button" $active={activePage === "applied"} onClick={() => setActivePage("applied")}>Applied Jobs</SidebarLink>
         <SidebarLink as="button" $active={activePage === "settings"} onClick={() => setActivePage("settings")}>Settings</SidebarLink>
 
-        <button onClick={logout} style={{
-          marginTop: 'auto',
-          padding: '0.5rem 1rem',
-          backgroundColor: '#ef4444',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '0.5rem',
-          fontWeight: 600,
-          cursor: 'pointer',
-        }}>
+        <Button
+          type="button"
+          onClick={logout}
+          style={{ marginTop: "auto", background: "#ef4444" }}
+        >
           Logout
-        </button>
+        </Button>
       </Sidebar>
 
       <MainContent>{renderPage()}</MainContent>
