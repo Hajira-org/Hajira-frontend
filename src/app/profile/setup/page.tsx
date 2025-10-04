@@ -22,10 +22,9 @@ const PageWrapper = styled.div`
 
 const Card = styled.div`
   backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   background: rgba(30, 41, 59, 0.85);
   width: 100%;
-  max-width: 600px;
+  max-width: 650px;
   padding: 2rem;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -109,7 +108,6 @@ const Select = styled.select`
   background: rgba(255, 255, 255, 0.05);
   color: #f9fafb;
   outline: none;
-  transition: 0.2s;
 
   option {
     background: #1e293b;
@@ -141,8 +139,8 @@ const Button = styled.button<ButtonProps>`
     disabled
       ? "#374151"
       : variant === "secondary"
-        ? "rgba(255,255,255,0.1)"
-        : "linear-gradient(90deg, #3b82f6, #06b6d4)"};
+      ? "rgba(255,255,255,0.1)"
+      : "linear-gradient(90deg, #3b82f6, #06b6d4)"};
 
   color: ${({ variant, disabled }) =>
     disabled ? "#9ca3af" : variant === "secondary" ? "#f9fafb" : "#fff"};
@@ -168,7 +166,7 @@ const ToastContainer = styled.div<{ type: "success" | "error" }>`
   color: #fff;
   padding: 1rem 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   animation: ${fadeIn} 0.3s ease forwards;
   z-index: 100;
 `;
@@ -182,7 +180,7 @@ const overlayFade = keyframes`
 const LoadingOverlay = styled.div`
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -192,14 +190,16 @@ const LoadingOverlay = styled.div`
 `;
 
 const Spinner = styled.div`
-  border: 4px solid rgba(255,255,255,0.2);
+  border: 4px solid rgba(255, 255, 255, 0.2);
   border-top: 4px solid #3b82f6;
   border-radius: 50%;
   width: 50px;
   height: 50px;
   animation: spin 1s linear infinite;
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 `;
 
@@ -255,15 +255,16 @@ const skillsListDefault = [
   "Selling Used Items Online",
   "Creating and Selling Simple Crafts",
   "Mystery Shopping/Store Audits",
-  "Selling Digital Downloads"
+  "Selling Digital Downloads",
 ];
 
 // ---------------- Component ----------------
-export default function ProfileSetupPage() {
+export default function SetupPage() {
   const [step, setStep] = useState(1);
   const [skillsList, setSkillsList] = useState(skillsListDefault);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -276,6 +277,7 @@ export default function ProfileSetupPage() {
     location: "",
     company: "",
     category: "",
+    avatar: "",
   });
 
   const handleChange = (e: any) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -290,13 +292,10 @@ export default function ProfileSetupPage() {
   const handleAddCustomSkill = () => {
     const newSkill = form.skillSearch.trim();
     if (!newSkill) return;
-
-    // avoid duplicates (case-insensitive)
     if (skillsList.some((s) => s.toLowerCase() === newSkill.toLowerCase())) {
       showToast("That skill already exists", "error");
       return;
     }
-
     setForm({
       ...form,
       skills: [...form.skills, newSkill],
@@ -311,55 +310,58 @@ export default function ProfileSetupPage() {
       setLoading(true);
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please login again.");
-
-      const payload =
-        form.role === "seeker"
-          ? {
-            role: form.role,
-            seeker: {
-              age: Number(form.age),
-              skills: form.skills,
-              bio: form.bio,
-              location: form.location,
-            },
-          }
-          : {
-            role: form.role,
+  
+      // ✅ Build payload based on chosen role
+      const isPoster = form.role === "poster";
+      const payload = isPoster
+        ? {
+            role: "poster",
             poster: {
               company: form.company,
               category: form.category,
               bio: form.bio,
               location: form.location,
+              avatar: form.avatar,
+            },
+          }
+        : {
+            role: "seeker",
+            seeker: {
+              age: Number(form.age),
+              skills: form.skills,
+              bio: form.bio,
+              location: form.location,
+              avatar: form.avatar,
             },
           };
-
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/setup`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const role = res.data.role || form.role;
-      localStorage.setItem("role", role);
-
+  
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  
+      // 🧠 Log for debugging – remove later
+      console.log("Submitting payload:", payload);
+  
+      const res = await axios.post(`${API_URL}/api/auth/setup`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      // ✅ Ensure we store the correct role
+      const savedRole = res.data.role || form.role;
+      localStorage.setItem("role", savedRole);
+  
       showToast("Profile setup complete!", "success");
-
+  
+      // ✅ Redirect based on actual role
       setTimeout(() => {
-        if (role === "seeker") router.push("/dashboard");
-        else if (role === "poster") router.push("/poster/dashboard");
-        else router.push("/signin");
+        router.push(savedRole === "poster" ? "/poster/dashboard" : "/dashboard");
       }, 1500);
     } catch (err: any) {
-      console.error(err);
-      showToast(
-        err.response?.data?.message || err.message || "Error saving profile",
-        "error"
-      );
+      console.error("Setup error:", err.response?.data || err.message);
+      showToast(err.response?.data?.message || "Error saving profile", "error");
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
     <PageWrapper>
       <Card>
@@ -370,7 +372,11 @@ export default function ProfileSetupPage() {
           <>
             <Field>
               <Label>Role</Label>
-              <Select name="role" value={form.role} onChange={handleChange}>
+              <Select
+                name="role"
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+              >
                 <option value="">-- Select Role --</option>
                 <option value="seeker">Looking for work</option>
                 <option value="poster">I want to hire</option>
@@ -385,185 +391,177 @@ export default function ProfileSetupPage() {
           </>
         )}
 
-        {/* Step 2: Seeker */}
-        {step === 2 && form.role === "seeker" && (
+        {/* Step 2 */}
+        {step === 2 && (
           <>
-            <Field>
-              <Label>Age</Label>
-              <Input
-                type="number"
-                name="age"
-                value={form.age}
-                onChange={handleChange}
-              />
-            </Field>
+            {/* Profile Image */}
+            <Field style={{ textAlign: "center" }}>
+              <Label>Profile Picture (optional)</Label>
+              {preview || form.avatar ? (
+                <img
+                  src={preview || form.avatar}
+                  alt="Preview"
+                  style={{
+                    width: 100,
+                    height: 100,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    marginBottom: "0.8rem",
+                    border: "2px solid #3b82f6",
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 100,
+                    height: 100,
+                    borderRadius: "50%",
+                    background: "#1e293b",
+                    margin: "0 auto 0.8rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#94a3b8",
+                  }}
+                >
+                  No image
+                </div>
+              )}
 
-            <Field>
-              <Label>Select Your Skills / Microjobs</Label>
               <Input
-                type="text"
-                placeholder="Search microjobs or add your own..."
-                value={form.skillSearch}
-                onChange={(e) =>
-                  setForm({ ...form, skillSearch: e.target.value })
-                }
-                style={{ marginBottom: "0.8rem" }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddCustomSkill();
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const url = URL.createObjectURL(file);
+                    setPreview(url);
+                    setForm({ ...form, avatar: url });
                   }
                 }}
               />
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "0.5rem",
-                  maxHeight: "300px",
-                  overflowY: "auto",
-                  paddingRight: "4px",
-                }}
-                className="no-scrollbar"
-              >
-                {skillsList
-                  .filter((s) =>
-                    s.toLowerCase().includes(form.skillSearch.toLowerCase())
-                  )
-                  .map((skill) => (
-                    <div
-                      key={skill}
-                      onClick={() => {
-                        if (!form.skills.includes(skill))
-                          setForm({ ...form, skills: [...form.skills, skill] });
-                        else
-                          setForm({
-                            ...form,
-                            skills: form.skills.filter((sk) => sk !== skill),
-                          });
-                      }}
-                      style={{
-                        padding: "0.5rem 1rem",
-                        borderRadius: "20px",
-                        cursor: "pointer",
-                        userSelect: "none",
-                        background: form.skills.includes(skill)
-                          ? "#3b82f6"
-                          : "rgba(255,255,255,0.1)",
-                        color: form.skills.includes(skill) ? "#fff" : "#f9fafb",
-                        border: form.skills.includes(skill)
-                          ? "none"
-                          : "1px solid rgba(255,255,255,0.25)",
-                        transition: "0.2s",
-                      }}
-                    >
-                      {skill}
-                    </div>
-                  ))}
-              </div>
 
-              <style jsx>{`
-                .no-scrollbar {
-                  scrollbar-width: none;
-                  -ms-overflow-style: none;
-                }
-                .no-scrollbar::-webkit-scrollbar {
-                  display: none;
-                }
-              `}</style>
+              <Input
+                type="text"
+                placeholder="Or paste image URL..."
+                value={form.avatar}
+                onChange={(e) => setForm({ ...form, avatar: e.target.value })}
+                style={{ marginTop: "0.5rem" }}
+              />
+            </Field>
 
-              {form.skillSearch &&
-                !skillsList
-                  .map((s) => s.toLowerCase())
-                  .includes(form.skillSearch.toLowerCase()) && (
-                  <Button
-                    style={{ marginTop: "0.8rem" }}
-                    onClick={handleAddCustomSkill}
+            {form.role === "seeker" ? (
+              <>
+                <Field>
+                  <Label>Age</Label>
+                  <Input type="number" name="age" value={form.age} onChange={handleChange} />
+                </Field>
+
+                <Field>
+                  <Label>Skills / Microjobs</Label>
+                  <Input
+                    type="text"
+                    placeholder="Search or add your own..."
+                    value={form.skillSearch}
+                    onChange={(e) => setForm({ ...form, skillSearch: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCustomSkill();
+                      }
+                    }}
+                    style={{ marginBottom: "0.8rem" }}
+                  />
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "0.5rem",
+                      maxHeight: "300px",
+                      overflowY: "auto",
+                      paddingRight: "4px",
+                    }}
                   >
-                    + Add  &quot;{form.skillSearch} &quot;
-                  </Button>
-                )}
-            </Field>
+                    {skillsList
+                      .filter((s) => s.toLowerCase().includes(form.skillSearch.toLowerCase()))
+                      .map((skill) => (
+                        <div
+                          key={skill}
+                          onClick={() => {
+                            if (!form.skills.includes(skill))
+                              setForm({ ...form, skills: [...form.skills, skill] });
+                            else
+                              setForm({
+                                ...form,
+                                skills: form.skills.filter((sk) => sk !== skill),
+                              });
+                          }}
+                          style={{
+                            padding: "0.5rem 1rem",
+                            borderRadius: "20px",
+                            cursor: "pointer",
+                            userSelect: "none",
+                            background: form.skills.includes(skill)
+                              ? "#3b82f6"
+                              : "rgba(255,255,255,0.1)",
+                            color: form.skills.includes(skill) ? "#fff" : "#f9fafb",
+                            border: form.skills.includes(skill)
+                              ? "none"
+                              : "1px solid rgba(255,255,255,0.25)",
+                          }}
+                        >
+                          {skill}
+                        </div>
+                      ))}
+                  </div>
+                </Field>
+              </>
+            ) : (
+              <>
+                <Field>
+                  <Label>Company/Brand Name</Label>
+                  <Input name="company" value={form.company} onChange={handleChange} />
+                </Field>
+                <Field>
+                  <Label>Category</Label>
+                  <Input name="category" value={form.category} onChange={handleChange} />
+                </Field>
+              </>
+            )}
 
             <ButtonRow>
               <Button variant="secondary" onClick={prevStep}>
                 Back
               </Button>
-              <Button
-                onClick={nextStep}
-                disabled={form.skills.length === 0 || !form.age}
-              >
-                Next
-              </Button>
+              <Button onClick={nextStep}>Next</Button>
             </ButtonRow>
           </>
         )}
 
-        {/* Step 2: Poster */}
-        {step === 2 && form.role === "poster" && (
-          <>
-            <Field>
-              <Label>Company/Brand Name</Label>
-              <Input
-                name="company"
-                value={form.company}
-                onChange={handleChange}
-              />
-            </Field>
-            <Field>
-              <Label>Job Category</Label>
-              <Input
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-              />
-            </Field>
-            <ButtonRow>
-              <Button variant="secondary" onClick={prevStep}>
-                Back
-              </Button>
-              <Button
-                onClick={nextStep}
-                disabled={!form.company || !form.category}
-              >
-                Next
-              </Button>
-            </ButtonRow>
-          </>
-        )}
-
-        {/* Step 3: Bio / Location */}
+        {/* Step 3 */}
         {step === 3 && (
           <>
             <Field>
-              <Label>Bio / Description</Label>
+              <Label>Bio</Label>
               <Textarea
                 name="bio"
                 value={form.bio}
                 onChange={handleChange}
-                placeholder={
-                  form.role === "seeker"
-                    ? "Tell us about yourself..."
-                    : "Describe your company or what you hire for..."
-                }
+                placeholder="Tell us about yourself..."
               />
             </Field>
+
             <Field>
               <Label>Location</Label>
-              <Input
-                name="location"
-                value={form.location}
-                onChange={handleChange}
-              />
+              <Input name="location" value={form.location} onChange={handleChange} />
             </Field>
+
             <ButtonRow>
               <Button variant="secondary" onClick={prevStep}>
                 Back
               </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={!form.bio || !form.location || loading}
-              >
+              <Button onClick={handleSubmit} disabled={!form.bio || !form.location || loading}>
                 {loading ? "Saving..." : "Finish"}
               </Button>
             </ButtonRow>
@@ -577,9 +575,7 @@ export default function ProfileSetupPage() {
         )}
       </Card>
 
-      {toast && (
-        <ToastContainer type={toast.type}>{toast.message}</ToastContainer>
-      )}
+      {toast && <ToastContainer type={toast.type}>{toast.message}</ToastContainer>}
     </PageWrapper>
   );
 }

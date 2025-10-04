@@ -44,7 +44,7 @@ export default function SignupPage() {
         toast.error(data.message || 'Signup failed');
       } else {
         localStorage.setItem('token', data.token);
-        toast.success('Account created successfully 🎉');
+        toast.success('Account created successfully!');
 
         // Show loading screen
         setShowLoadingScreen(true);

@@ -41,6 +41,7 @@ export default function SeekerDashboardPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [search, setSearch] = useState('');
   const [profile, setProfile] = useState({ headline: "", bio: "", skills: "" });
+  const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" }); // ✅ added
   const logout = useLogout();
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -142,13 +143,64 @@ export default function SeekerDashboardPage() {
           </Card>
         );
 
-      // ---------------- SETTINGS ----------------
+      // ---------------- SETTINGS (Updated with Change Password) ----------------
       case "settings":
         return (
           <Card>
             <CardTitle>Settings</CardTitle>
             <CardContent>
-              <p>Later: notification preferences, account settings, etc.</p>
+              <p style={{ marginBottom: "1rem" }}>Change your account password below:</p>
+
+              <FormContainer
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    const token = localStorage.getItem("token");
+                    const res = await fetch(`${API_URL}/api/auth/change-password`, {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify(passwords),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.message || "Error changing password");
+
+                    alert("Password changed successfully ✅");
+                    setPasswords({ currentPassword: "", newPassword: "" });
+                  } catch (err: any) {
+                    alert(err.message || "Failed to change password ❌");
+                  }
+                }}
+              >
+                <InputGroup>
+                  <Input
+                    type="password"
+                    placeholder="Current Password"
+                    value={passwords.currentPassword}
+                    onChange={(e) =>
+                      setPasswords({ ...passwords, currentPassword: e.target.value })
+                    }
+                    required
+                  />
+                </InputGroup>
+
+                <InputGroup>
+                  <Input
+                    type="password"
+                    placeholder="New Password"
+                    value={passwords.newPassword}
+                    onChange={(e) =>
+                      setPasswords({ ...passwords, newPassword: e.target.value })
+                    }
+                    required
+                  />
+                </InputGroup>
+
+                <Button type="submit">Update Password</Button>
+              </FormContainer>
             </CardContent>
           </Card>
         );

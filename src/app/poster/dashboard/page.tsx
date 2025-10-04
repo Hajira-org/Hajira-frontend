@@ -24,6 +24,9 @@ export default function PosterDashboardPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const logout = useLogout();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+
 
   // ---------------- JOB FORM ----------------
   const [form, setForm] = useState({
@@ -33,12 +36,16 @@ export default function PosterDashboardPage() {
     salary: "",
     requirements: "",
     workModel: "Flexible",
+    image: "",
   });
 
+  const [jobImageFile, setJobImageFile] = useState<File | null>(null);
+
   const [profile, setProfile] = useState({ company: "", about: "", logo: "" });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [showApplicantsMap, setShowApplicantsMap] = useState<Record<string, boolean>>({});
 
-  // Default job types
+  // ---------------- JOB TYPES ----------------
   const [jobTypes, setJobTypes] = useState([
     "Car Washing/Detailing (Mobile service)",
     "Lawn Mowing/Yard Work",
@@ -124,6 +131,30 @@ export default function PosterDashboardPage() {
     }));
   };
 
+  // ---------------- UPLOAD HELPER ----------------
+  const uploadFile = async (file: File): Promise<string | null> => {
+    if (!file) return null;
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`${API_URL}/api/upload`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      return data.url || null;
+    } catch (err) {
+      console.error("File upload error:", err);
+      alert("❌ File upload failed.");
+      return null;
+    }
+  };
+
   // ---------------- DELETE JOB ----------------
   const handleDeleteJob = async (jobId: string) => {
     if (!confirm("Are you sure you want to delete this job?")) return;
@@ -163,13 +194,19 @@ export default function PosterDashboardPage() {
                   e.preventDefault();
                   const token = localStorage.getItem("token");
 
+                  let uploadedLogo = profile.logo;
+                  if (logoFile) {
+                    const logoUrl = await uploadFile(logoFile);
+                    if (logoUrl) uploadedLogo = logoUrl;
+                  }
+
                   await fetch(`${API_URL}/api/profile`, {
                     method: "PUT",
                     headers: {
                       "Content-Type": "application/json",
                       Authorization: `Bearer ${token}`,
                     },
-                    body: JSON.stringify(profile),
+                    body: JSON.stringify({ ...profile, logo: uploadedLogo }),
                   });
                   alert("Profile updated ✅");
                 }}
@@ -193,12 +230,23 @@ export default function PosterDashboardPage() {
                 </InputGroup>
 
                 <InputGroup>
+                  <label>Upload Company Logo</label>
                   <Input
-                    placeholder="Logo URL"
-                    value={profile.logo}
-                    onChange={e => setProfile({ ...profile, logo: e.target.value })}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) setLogoFile(e.target.files[0]);
+                    }}
                   />
                 </InputGroup>
+
+                {profile.logo && (
+                  <img
+                    src={profile.logo}
+                    alt="Company Logo"
+                    style={{ width: 120, height: 120, borderRadius: "0.5rem", marginTop: "0.5rem" }}
+                  />
+                )}
 
                 <Button type="submit">Save Profile</Button>
               </FormContainer>
@@ -211,17 +259,19 @@ export default function PosterDashboardPage() {
         return (
           <Card style={{ background: "#0f172a", color: "#f8fafc", padding: "1.5rem" }}>
             <CardTitle style={{ fontSize: "1.3rem", fontWeight: 600 }}>
-              🚀 Post a Quick Job
+              Post a Quick Job
             </CardTitle>
             <CardContent>
-              <p style={{ color: "#94a3b8", marginBottom: "1rem" }}>
-                Post your task in under a minute — nearby workers will see it instantly.
-              </p>
-
               <FormContainer
                 onSubmit={async (e) => {
                   e.preventDefault();
                   const token = localStorage.getItem("token");
+
+                  let uploadedImage = form.image;
+                  if (jobImageFile) {
+                    const url = await uploadFile(jobImageFile);
+                    if (url) uploadedImage = url;
+                  }
 
                   const res = await fetch(`${API_URL}/api/jobs`, {
                     method: "POST",
@@ -231,6 +281,7 @@ export default function PosterDashboardPage() {
                     },
                     body: JSON.stringify({
                       ...form,
+                      image: uploadedImage,
                       requirements: form.requirements
                         ? form.requirements.split(",").map(r => r.trim())
                         : [],
@@ -240,7 +291,7 @@ export default function PosterDashboardPage() {
                   const data = await res.json();
 
                   if (res.ok) {
-                    alert("✅ Job posted! Nearby workers can now see it.");
+                    alert("✅ Job posted!");
                     setForm({
                       title: "",
                       description: "",
@@ -248,70 +299,57 @@ export default function PosterDashboardPage() {
                       salary: "",
                       requirements: "",
                       workModel: "Flexible",
+                      image: "",
                     });
+                    setJobImageFile(null);
                     setActivePage("myJobs");
                   } else {
                     alert(data.message || "❌ Failed to post job.");
                   }
                 }}
               >
-                {/* STEP 1: Job Category */}
-                <div style={{ marginBottom: "1rem" }}>
-                  <label style={{ display: "block", fontWeight: 500, marginBottom: "0.5rem" }}>
-                    What type of work?
-                  </label>
+                {/* Job Type */}
+                <label>What type of work?</label>
+                <Select
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                >
+                  <option value="">Select a job type</option>
+                  {jobTypes.map((type, idx) => (
+                    <option key={idx} value={type}>{type}</option>
+                  ))}
+                </Select>
 
-                  <Select
-                    value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                  <Input
+                    placeholder="Or add your own..."
+                    value={customJob}
+                    onChange={(e) => setCustomJob(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!customJob.trim()) return;
+                      if (!jobTypes.includes(customJob.trim())) {
+                        setJobTypes([...jobTypes, customJob.trim()]);
+                      }
+                      setForm({ ...form, title: customJob.trim() });
+                      setCustomJob("");
+                    }}
                   >
-                    <option value="">Select a job type</option>
-                    {jobTypes.map((type, idx) => (
-                      <option key={idx} value={type}>{type}</option>
-                    ))}
-                  </Select>
-
-                  {/* Add custom job type */}
-                  <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-                    <Input
-                      placeholder="Or add your own..."
-                      value={customJob}
-                      onChange={(e) => setCustomJob(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        if (!customJob.trim()) return;
-                        if (!jobTypes.includes(customJob.trim())) {
-                          setJobTypes([...jobTypes, customJob.trim()]);
-                        }
-                        setForm({ ...form, title: customJob.trim() });
-                        setCustomJob("");
-                      }}
-                    >
-                      ➕ Add
-                    </Button>
-                  </div>
+                    ➕ Add
+                  </Button>
                 </div>
 
-                {/* STEP 2: Description */}
-                <InputGroup>
-                  <Input
-                    as="textarea"
-                    rows={2}
-                    placeholder="Describe briefly what you need done..."
-                    value={form.description}
-                    onChange={e => setForm({ ...form, description: e.target.value })}
-                    style={{ resize: "none" }}
-                  />
-                </InputGroup>
+                <Input
+                  as="textarea"
+                  rows={2}
+                  placeholder="Describe briefly what you need done..."
+                  value={form.description}
+                  onChange={e => setForm({ ...form, description: e.target.value })}
+                />
 
-                {/* STEP 3: Location & Offer */}
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "0.75rem"
-                }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                   <Input
                     placeholder="Location (e.g. Westlands)"
                     value={form.location}
@@ -324,56 +362,52 @@ export default function PosterDashboardPage() {
                   />
                 </div>
 
-                {/* STEP 4: Work Model */}
+                <Select
+                  value={form.workModel}
+                  onChange={e => setForm({ ...form, workModel: e.target.value })}
+                >
+                  <option value="Flexible">Flexible</option>
+                  <option value="Same Day">Same Day</option>
+                  <option value="Scheduled">Scheduled</option>
+                </Select>
+
+                {/* Upload Job Photo */}
                 <div style={{ marginTop: "1rem" }}>
-                  <Select
-                    value={form.workModel}
-                    onChange={e => setForm({ ...form, workModel: e.target.value })}
-                  >
-                    <option value="Flexible">Flexible</option>
-                    <option value="Same Day">Same Day</option>
-                    <option value="Scheduled">Scheduled</option>
-                  </Select>
+                  <label>Upload Job Image (optional)</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) setJobImageFile(e.target.files[0]);
+                    }}
+                  />
                 </div>
 
-                {/* Live Preview */}
-                {form.title && (
-                  <div
-                    style={{
-                      marginTop: "1.5rem",
-                      backgroundColor: "#1e293b",
-                      padding: "1rem",
-                      borderRadius: "0.75rem",
-                      border: "1px solid #334155",
-                    }}
-                  >
-                    <h4 style={{ color: "#38bdf8", marginBottom: "0.3rem" }}>Preview:</h4>
-                    <p><strong>{form.title}</strong> — {form.description || "No description yet."}</p>
-                    <p>📍 {form.location || "No location"} | 💰 {form.salary || "Not set"}</p>
-                    <p style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                      Model: {form.workModel}
-                    </p>
-                  </div>
+                {form.image && (
+                  <img
+                    src={form.image}
+                    alt="Job Image"
+                    style={{ width: "100%", borderRadius: "0.5rem", marginTop: "0.5rem" }}
+                  />
                 )}
 
                 <Button
                   type="submit"
                   style={{
-                    marginTop: "1.2rem",
+                    marginTop: "1rem",
                     backgroundColor: "#3b82f6",
-                    padding: "0.9rem 1.2rem",
                     fontWeight: 600,
                     fontSize: "1rem"
                   }}
                 >
-                  Post Job Instantly 🚀
+                  Post Job 🚀
                 </Button>
               </FormContainer>
             </CardContent>
           </Card>
         );
 
-      // ---------------- MY JOBS & HOME ----------------
+      // ---------------- MY JOBS ----------------
       case "home":
       case "myJobs": {
         const filteredJobs = jobs.filter(job =>
@@ -427,12 +461,15 @@ export default function PosterDashboardPage() {
               }}>
                 <CardTitle style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>
                   {job.title}
-                  {job.applications?.length > 0 && (
-                    <span style={{ fontSize: "0.8rem", color: "#94a3b8", marginLeft: "0.5rem" }}>
-                      ({job.applications.length} applicants)
-                    </span>
-                  )}
                 </CardTitle>
+
+                {job.image && (
+                  <img
+                    src={job.image}
+                    alt="Job"
+                    style={{ width: "100%", borderRadius: "0.5rem", marginBottom: "0.5rem" }}
+                  />
+                )}
 
                 <CardContent style={{ marginBottom: "1rem" }}>
                   <p style={{ color: "#cbd5e1", marginBottom: "0.5rem" }}>{job.description}</p>
@@ -444,7 +481,6 @@ export default function PosterDashboardPage() {
                   )}
                 </CardContent>
 
-                {/* Delete Button */}
                 <CardActions style={{ display: "flex", justifyContent: "flex-end" }}>
                   <Button
                     type="button"
@@ -460,6 +496,61 @@ export default function PosterDashboardPage() {
         );
       }
 
+      case "settings":
+        return (
+          <Card>
+            <CardTitle>Change Password</CardTitle>
+            <CardContent>
+              <FormContainer
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const token = localStorage.getItem("token");
+                  const res = await fetch(`${API_URL}/api/auth/change-password`, {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                      currentPassword,
+                      newPassword,
+                    }),
+                  });
+                  const data = await res.json();
+                  if (res.ok) {
+                    alert("✅ Password updated successfully!");
+                    setCurrentPassword("");
+                    setNewPassword("");
+                  } else {
+                    alert(`❌ ${data.message || "Failed to change password"}`);
+                  }
+                }}
+              >
+                <InputGroup>
+                  <Input
+                    type="password"
+                    placeholder="Current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Input
+                    type="password"
+                    placeholder="New password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                </InputGroup>
+                <Button type="submit">Update Password</Button>
+              </FormContainer>
+            </CardContent>
+          </Card>
+        );
+
+
       default:
         return (
           <Card>
@@ -469,6 +560,8 @@ export default function PosterDashboardPage() {
         );
     }
   };
+
+
 
   // ---------------- MAIN RETURN ----------------
   return (
