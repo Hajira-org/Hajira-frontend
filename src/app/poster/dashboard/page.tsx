@@ -129,19 +129,19 @@ export default function PosterDashboardPage() {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
       if (!token) return;
-  
+
       try {
         const res = await fetch(`${API_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-  
+
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to fetch user");
-  
+
         const seeker = data.user?.seeker || {};
         const name = data.user.name || "";
         const bio = data.user.bio || "";
-  
+
         setProfile({
           name,
           bio,
@@ -151,10 +151,10 @@ export default function PosterDashboardPage() {
         console.error("Error fetching user:", err);
       }
     };
-  
+
     fetchUser();
   }, []);
-  
+
   const toggleApplicants = (jobId: string) => {
     setShowApplicantsMap(prev => ({
       ...prev,
@@ -249,7 +249,7 @@ export default function PosterDashboardPage() {
                           skills: profile.skills.split(",").map((s) => s.trim()),
                         },
                       }),
-                      
+
                     });
                     alert("Profile updated ✅");
                   }}
@@ -456,6 +456,7 @@ export default function PosterDashboardPage() {
 
         return (
           <>
+            {/* Search bar + refresh button */}
             <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem' }}>
               <input
                 type="text"
@@ -485,18 +486,24 @@ export default function PosterDashboardPage() {
               </button>
             </div>
 
+            {/* No jobs found */}
             {filteredJobs.length === 0 && (
               <p style={{ color: '#94a3b8', textAlign: 'center' }}>No jobs found.</p>
             )}
 
+            {/* Job cards */}
             {filteredJobs.map(job => (
-              <Card key={job._id} style={{
-                backgroundColor: "#1e293b",
-                color: "#f1f5f9",
-                borderRadius: "0.75rem",
-                padding: "1rem 1.25rem",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.5)"
-              }}>
+              <Card
+                key={job._id}
+                style={{
+                  backgroundColor: "#1e293b",
+                  color: "#f1f5f9",
+                  borderRadius: "0.75rem",
+                  padding: "1rem 1.25rem",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+                  marginBottom: "1rem",
+                }}
+              >
                 <CardTitle style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>
                   {job.title}
                 </CardTitle>
@@ -505,7 +512,11 @@ export default function PosterDashboardPage() {
                   <img
                     src={job.image}
                     alt="Job"
-                    style={{ width: "100%", borderRadius: "0.5rem", marginBottom: "0.5rem" }}
+                    style={{
+                      width: "100%",
+                      borderRadius: "0.5rem",
+                      marginBottom: "0.5rem",
+                    }}
                   />
                 )}
 
@@ -519,7 +530,15 @@ export default function PosterDashboardPage() {
                   )}
                 </CardContent>
 
-                <CardActions style={{ display: "flex", justifyContent: "flex-end" }}>
+                <CardActions style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Button
+                    type="button"
+                    onClick={() => toggleApplicants(job._id)}
+                    style={{ backgroundColor: "#3b82f6", padding: "0.5rem 0.9rem" }}
+                  >
+                    👥 {showApplicantsMap[job._id] ? "Hide Applicants" : "View Applicants"}
+                  </Button>
+
                   <Button
                     type="button"
                     style={{ backgroundColor: "#ef4444", padding: "0.5rem 0.9rem" }}
@@ -528,12 +547,48 @@ export default function PosterDashboardPage() {
                     🗑️ Delete
                   </Button>
                 </CardActions>
+
+                {/* Applicants list */}
+                {showApplicantsMap[job._id] && (
+                  <div
+                    style={{
+                      marginTop: "1rem",
+                      background: "#0f172a",
+                      padding: "1rem",
+                      borderRadius: "0.5rem",
+                    }}
+                  >
+                    {job.applications?.length > 0 ? (
+                      job.applications.map((app : any, index : any) => (
+                        <div
+                          key={app._id || index}
+                          style={{
+                            marginBottom: "0.8rem",
+                            borderBottom: "1px solid #334155",
+                            paddingBottom: "0.5rem",
+                          }}
+                        >
+                          <p>
+                            👤 Applicant:{" "}
+                            {app.applicant?.name
+                              ? `${app.applicant.name} (${app.applicant.email})`
+                              : app.applicant?._id || "Unknown"}
+                          </p>
+                          <p>💰 Bid: {app.bid}</p>
+                          <p>🕒 Applied At: {new Date(app.appliedAt).toLocaleString()}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p style={{ color: "#94a3b8" }}>No applications yet.</p>
+                    )}
+                  </div>
+                )}
               </Card>
             ))}
           </>
         );
       }
-
+      // ---------------- SETTINGS ----------------        
       case "settings":
         return (
           <Card>

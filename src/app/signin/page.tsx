@@ -44,7 +44,7 @@ export default function SigninPage() {
       } else {
         localStorage.setItem('token', data.token);
 
-        toast.success('Login successful! 🎉');
+        toast.success('Login successful!');
 
         if (data.user?.role?.toLowerCase() === 'poster') {
           router.push('/poster/dashboard');
