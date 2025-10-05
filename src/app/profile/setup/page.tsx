@@ -372,6 +372,7 @@ export default function SetupPage() {
           <>
             <Field>
               <Label>Role</Label>
+              <Label>Dont worry you can switch this later.</Label>
               <Select
                 name="role"
                 value={form.role}

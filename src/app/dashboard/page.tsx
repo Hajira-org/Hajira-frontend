@@ -40,9 +40,10 @@ export default function SeekerDashboardPage() {
   const [activePage, setActivePage] = useState("home");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [search, setSearch] = useState('');
-  const [profile, setProfile] = useState({ headline: "", bio: "", skills: "" });
+  const [profile, setProfile] = useState({ name: "", bio: "", skills: "" });
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" }); // ✅ added
   const logout = useLogout();
+
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -66,6 +67,40 @@ export default function SeekerDashboardPage() {
     }
   }, [activePage]);
 
+  //----------------Fetch User to display on the profile page -----------//
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+  
+      try {
+        const res = await fetch(`${API_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to fetch user");
+  
+        const seeker = data.user?.seeker || {};
+        const name = data.user.name || "";
+        const bio = data.user.bio || "";
+  
+        setProfile({
+          name,
+          bio,
+          skills: (seeker.skills || []).join(", "),
+        });
+      } catch (err) {
+        console.error("Error fetching user:", err);
+      }
+    };
+  
+    fetchUser();
+  }, []);
+  
+  
+
+
   // ---------------- Render pages ----------------
   const renderPage = () => {
     switch (activePage) {
@@ -73,54 +108,81 @@ export default function SeekerDashboardPage() {
       case "profile":
         return (
           <Card>
-            <CardTitle>Update Profile</CardTitle>
+            <CardTitle>Your Profile</CardTitle>
             <CardContent>
-              <FormContainer
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  const token = localStorage.getItem("token");
-                  await fetch(`${API_URL}/api/seeker/profile`, {
-                    method: "PUT",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(profile),
-                  });
-                  alert("Profile updated ✅");
-                }}
-              >
-                <InputGroup>
-                  <Input
-                    placeholder="Headline"
-                    value={profile.headline}
-                    onChange={e => setProfile({ ...profile, headline: e.target.value })}
-                  />
-                </InputGroup>
+              {profile && (
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <p><strong>Name:</strong> {profile.name || "—"}</p>
+                  <p><strong>Bio:</strong> {profile.bio || "—"}</p>
+                  <p><strong>Skills:</strong> {profile.skills || "—"}</p>
+                </div>
+              )}
 
-                <InputGroup>
-                  <Input
-                    as="textarea"
-                    rows={3}
-                    placeholder="Bio"
-                    value={profile.bio}
-                    onChange={e => setProfile({ ...profile, bio: e.target.value })}
-                  />
-                </InputGroup>
+              <hr style={{ margin: "1.5rem 0" }} />
 
-                <InputGroup>
-                  <Input
-                    placeholder="Skills (comma-separated)"
-                    value={profile.skills}
-                    onChange={e => setProfile({ ...profile, skills: e.target.value })}
-                  />
-                </InputGroup>
+              <CardTitle>Update Profile</CardTitle>
+              <CardContent>
+                <FormContainer
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const token = localStorage.getItem("token");
+                    await fetch(`${API_URL}/api/auth/profile`, {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        name: profile.name,
+                        bio: profile.bio,
+                        seeker: {
+                          skills: profile.skills.split(",").map((s) => s.trim()),
+                        },
+                      }),
+                      
+                    });
+                    alert("Profile updated ✅");
+                  }}
+                >
+                  <InputGroup>
+                    <Input
+                      placeholder="Headline"
+                      value={profile.name || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, name: e.target.value })
+                      }
+                    />
+                  </InputGroup>
 
-                <Button type="submit">Save Profile</Button>
-              </FormContainer>
+                  <InputGroup>
+                    <Input
+                      as="textarea"
+                      rows={3}
+                      placeholder="Bio"
+                      value={profile.bio || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, bio: e.target.value })
+                      }
+                    />
+                  </InputGroup>
+
+                  <InputGroup>
+                    <Input
+                      placeholder="Skills (comma-separated)"
+                      value={profile.skills || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, skills: e.target.value })
+                      }
+                    />
+                  </InputGroup>
+
+                  <Button type="submit">Save Profile</Button>
+                </FormContainer>
+              </CardContent>
             </CardContent>
           </Card>
         );
+
 
       // ---------------- APPLIED ----------------
       case "applied":
