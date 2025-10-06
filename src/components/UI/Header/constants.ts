@@ -27,7 +27,7 @@ export const links = [
   },
   {
     url: '/',
-    linkTo: 'dashboard',
+    linkTo: 'Dashboard',
   },
   {
     url: '#FAQ',
