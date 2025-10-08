@@ -1,4 +1,5 @@
 'use client';
+import "leaflet/dist/leaflet.css";
 import { useState, useEffect } from 'react';
 import {
   DashboardWrapper,
@@ -16,6 +17,8 @@ import {
   CardActions,
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
+import "leaflet/dist/leaflet.css";
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -115,6 +118,65 @@ export default function PosterDashboardPage() {
       console.error("Error fetching jobs:", err);
     }
   };
+  useEffect(() => {
+    if (activePage !== "home") return;
+  
+    let map: any;
+  
+    const initMap = async () => {
+      const L = await import("leaflet");
+      const mapContainer = document.getElementById("userMap");
+  
+      if (!mapContainer) return;
+      if (mapContainer.getAttribute("data-initialized")) return;
+      mapContainer.setAttribute("data-initialized", "true");
+  
+      map = L.map(mapContainer).setView([-1.286389, 36.817223], 12);
+  
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(map);
+  
+      // 🔁 Force Leaflet to recalc dimensions
+      setTimeout(() => map.invalidateSize(), 500);
+  
+      const success = (pos: GeolocationPosition) => {
+        const { latitude, longitude } = pos.coords;
+        console.log("📍 Location found:", latitude, longitude);
+        map.flyTo([latitude, longitude], 14);
+        L.marker([latitude, longitude]).addTo(map).bindPopup("📍 You are here").openPopup();
+      };
+  
+      const error = async (err: GeolocationPositionError) => {
+        console.warn("❌ Geolocation error:", err.message);
+        try {
+          const res = await fetch("https://ipapi.co/json/", { cache: "no-store" });
+          const loc = await res.json();
+          map.setView([loc.latitude, loc.longitude], 13);
+          L.marker([loc.latitude, loc.longitude])
+            .addTo(map)
+            .bindPopup(`📍 Approx. location: ${loc.city}`)
+            .openPopup();
+        } catch (e) {
+          console.warn("❌ IP fallback failed:", e);
+        }
+      };
+  
+      navigator.geolocation.getCurrentPosition(success, error, {
+        enableHighAccuracy: true,
+        timeout: 30000,
+        maximumAge: 0,
+      });
+    };
+  
+    initMap();
+    return () => {
+      if (map) map.remove();
+    };
+  }, [activePage]);
+  
+  
 
   useEffect(() => {
     if (activePage === "home" || activePage === "myJobs") {
@@ -456,6 +518,25 @@ export default function PosterDashboardPage() {
 
         return (
           <>
+            {activePage === "home" && (
+              <div
+              id="userMap"
+              style={{
+                width: '100%',
+                height: '400px',
+                borderRadius: '0.75rem',
+                overflow: 'hidden',
+                marginBottom: '1.5rem',
+                border: '1px solid rgb(51,65,85)',
+                zIndex: 1,
+                backgroundColor: '#0f172a', // match your dark theme
+              }}
+            />
+            
+
+
+            )}
+
             {/* Search bar + refresh button */}
             <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem' }}>
               <input
@@ -559,7 +640,7 @@ export default function PosterDashboardPage() {
                     }}
                   >
                     {job.applications?.length > 0 ? (
-                      job.applications.map((app : any, index : any) => (
+                      job.applications.map((app: any, index: any) => (
                         <div
                           key={app._id || index}
                           style={{

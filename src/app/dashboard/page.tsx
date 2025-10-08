@@ -15,6 +15,7 @@ import {
   Input
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
+import "leaflet/dist/leaflet.css";
 
 // ---------------- Types ----------------
 interface Poster {
@@ -66,25 +67,85 @@ export default function SeekerDashboardPage() {
       fetchJobs();
     }
   }, [activePage]);
+  // ---------------- Map initialization for Home ----------------
+  useEffect(() => {
+    if (activePage !== "home") return;
+  
+    let map: any;
+  
+    const initMap = async () => {
+      const L = await import("leaflet");
+      const mapContainer = document.getElementById("userMap");
+  
+      if (!mapContainer) return;
+      if (mapContainer.getAttribute("data-initialized")) return;
+      mapContainer.setAttribute("data-initialized", "true");
+  
+      map = L.map(mapContainer).setView([-1.286389, 36.817223], 12);
+  
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(map);
+  
+      // 🔁 Force Leaflet to recalc dimensions
+      setTimeout(() => map.invalidateSize(), 500);
+  
+      const success = (pos: GeolocationPosition) => {
+        const { latitude, longitude } = pos.coords;
+        console.log("📍 Location found:", latitude, longitude);
+        map.flyTo([latitude, longitude], 14);
+        L.marker([latitude, longitude]).addTo(map).bindPopup("📍 You are here").openPopup();
+      };
+  
+      const error = async (err: GeolocationPositionError) => {
+        console.warn("❌ Geolocation error:", err.message);
+        try {
+          const res = await fetch("https://ipapi.co/json/", { cache: "no-store" });
+          const loc = await res.json();
+          map.setView([loc.latitude, loc.longitude], 13);
+          L.marker([loc.latitude, loc.longitude])
+            .addTo(map)
+            .bindPopup(`📍 Approx. location: ${loc.city}`)
+            .openPopup();
+        } catch (e) {
+          console.warn("❌ IP fallback failed:", e);
+        }
+      };
+  
+      navigator.geolocation.getCurrentPosition(success, error, {
+        enableHighAccuracy: true,
+        timeout: 30000,
+        maximumAge: 0,
+      });
+    };
+  
+    initMap();
+    return () => {
+      if (map) map.remove();
+    };
+  }, [activePage]);
+  
+  
 
   //----------------Fetch User to display on the profile page -----------//
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
       if (!token) return;
-  
+
       try {
         const res = await fetch(`${API_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-  
+
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to fetch user");
-  
+
         const seeker = data.user?.seeker || {};
         const name = data.user.name || "";
         const bio = data.user.bio || "";
-  
+
         setProfile({
           name,
           bio,
@@ -94,11 +155,11 @@ export default function SeekerDashboardPage() {
         console.error("Error fetching user:", err);
       }
     };
-  
+
     fetchUser();
   }, []);
-  
-  
+
+
 
 
   // ---------------- Render pages ----------------
@@ -139,7 +200,7 @@ export default function SeekerDashboardPage() {
                           skills: profile.skills.split(",").map((s) => s.trim()),
                         },
                       }),
-                      
+
                     });
                     alert("Profile updated ✅");
                   }}
@@ -278,6 +339,21 @@ export default function SeekerDashboardPage() {
 
         return (
           <>
+            {/* 🗺️ Seeker Map */}
+            <div
+              id="userMap"
+              style={{
+                width: '100%',
+                height: '400px',
+                borderRadius: '0.75rem',
+                overflow: 'hidden',
+                marginBottom: '1.5rem',
+                border: '1px solid rgb(51,65,85)',
+                zIndex: 1,
+                backgroundColor: '#0f172a', // match your dark theme
+              }}
+            />
+
             <div style={{ marginBottom: '1.5rem', display: "flex", gap: "0.5rem" }}>
               <input
                 type="text"

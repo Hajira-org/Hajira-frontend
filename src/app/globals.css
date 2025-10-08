@@ -1,1 +1,29 @@
 @import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+/* Fix Leaflet map height and z-index issues */
+.leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 10;
+    background: #0f172a;
+  }
+  
+  .leaflet-pane,
+  .leaflet-tile,
+  .leaflet-marker-icon,
+  .leaflet-popup {
+    z-index: 10 !important;
+  }
+  #userMap {
+    width: 100% !important;
+    height: 400px !important;
+    min-height: 400px !important;
+    display: block !important;
+    z-index: 1 !important;
+  }
+  @media (max-width: 600px) {
+    #userMap {
+      height: 300px !important;
+    }
+  }
+    
+  
