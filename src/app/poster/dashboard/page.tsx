@@ -17,7 +17,8 @@ import {
   CardActions,
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
-import "leaflet/dist/leaflet.css";
+
+
 
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -26,7 +27,7 @@ export default function PosterDashboardPage() {
   const [activePage, setActivePage] = useState("home");
   const [jobs, setJobs] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [profile, setProfile] = useState({ name: "", bio: "", skills: "" });
+  const [profile, setProfile] = useState({ name: "", bio: "", skills: "", avatar: "" });
   const logout = useLogout();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -213,11 +214,13 @@ export default function PosterDashboardPage() {
         const seeker = data.user?.seeker || {};
         const name = data.user.name || "";
         const bio = data.user.bio || "";
+        const avatar = data.user.avatar || "";
 
         setProfile({
           name,
           bio,
           skills: (seeker.skills || []).join(", "),
+          avatar,
         });
       } catch (err) {
         console.error("Error fetching user:", err);
@@ -294,6 +297,35 @@ export default function PosterDashboardPage() {
             <CardContent>
               {profile && (
                 <div style={{ marginBottom: "1.5rem" }}>
+                  {profile.avatar ? (
+                    <img
+                      src={profile.avatar}
+                      alt="User Avatar"
+                      style={{
+                        width: 150,
+                        height: 150,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        marginBottom: "1rem",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 150,
+                        height: 150,
+                        borderRadius: "50%",
+                        background: "#ccc",
+                        display: "inline-flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      No Image
+                    </div>
+                  )}
+
                   <p><strong>Name:</strong> {profile.name || "—"}</p>
                   <p><strong>Bio:</strong> {profile.bio || "—"}</p>
                   <p><strong>Skills:</strong> {profile.skills || "—"}</p>
@@ -629,7 +661,7 @@ export default function PosterDashboardPage() {
                   >
                     👥 {showApplicantsMap[job._id] ? "Hide Applicants" : "View Applicants"}
                   </Button>
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap:"20px" }}>
+                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "20px" }}>
                     <Button
                       type="button"
                       style={{ backgroundColor: "#22c55e", padding: "0.5rem 0.9rem" }}

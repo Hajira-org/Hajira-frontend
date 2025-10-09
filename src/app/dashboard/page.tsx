@@ -41,7 +41,7 @@ export default function SeekerDashboardPage() {
   const [activePage, setActivePage] = useState("home");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [search, setSearch] = useState('');
-  const [profile, setProfile] = useState({ name: "", bio: "", skills: "" });
+  const [profile, setProfile] = useState({ name: "", bio: "", skills: "", avatar: "" });
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" }); // ✅ added
   const logout = useLogout();
 
@@ -70,34 +70,34 @@ export default function SeekerDashboardPage() {
   // ---------------- Map initialization for Home ----------------
   useEffect(() => {
     if (activePage !== "home") return;
-  
+
     let map: any;
-  
+
     const initMap = async () => {
       const L = await import("leaflet");
       const mapContainer = document.getElementById("userMap");
-  
+
       if (!mapContainer) return;
       if (mapContainer.getAttribute("data-initialized")) return;
       mapContainer.setAttribute("data-initialized", "true");
-  
+
       map = L.map(mapContainer).setView([-1.286389, 36.817223], 12);
-  
+
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: "© OpenStreetMap contributors",
       }).addTo(map);
-  
+
       // 🔁 Force Leaflet to recalc dimensions
       setTimeout(() => map.invalidateSize(), 500);
-  
+
       const success = (pos: GeolocationPosition) => {
         const { latitude, longitude } = pos.coords;
         console.log("📍 Location found:", latitude, longitude);
         map.flyTo([latitude, longitude], 14);
         L.marker([latitude, longitude]).addTo(map).bindPopup("📍 You are here").openPopup();
       };
-  
+
       const error = async (err: GeolocationPositionError) => {
         console.warn("❌ Geolocation error:", err.message);
         try {
@@ -112,21 +112,21 @@ export default function SeekerDashboardPage() {
           console.warn("❌ IP fallback failed:", e);
         }
       };
-  
+
       navigator.geolocation.getCurrentPosition(success, error, {
         enableHighAccuracy: true,
         timeout: 30000,
         maximumAge: 0,
       });
     };
-  
+
     initMap();
     return () => {
       if (map) map.remove();
     };
   }, [activePage]);
-  
-  
+
+
 
   //----------------Fetch User to display on the profile page -----------//
   useEffect(() => {
@@ -145,11 +145,13 @@ export default function SeekerDashboardPage() {
         const seeker = data.user?.seeker || {};
         const name = data.user.name || "";
         const bio = data.user.bio || "";
+        const avatar = data.user.avatar || "";
 
         setProfile({
           name,
           bio,
           skills: (seeker.skills || []).join(", "),
+          avatar,
         });
       } catch (err) {
         console.error("Error fetching user:", err);
@@ -173,75 +175,100 @@ export default function SeekerDashboardPage() {
             <CardContent>
               {profile && (
                 <div style={{ marginBottom: "1.5rem" }}>
+                  {profile.avatar ? (
+                    <img
+                      src={profile.avatar}
+                      alt="User Avatar"
+                      style={{
+                        width: 150,
+                        height: 150,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        marginBottom: "1rem",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 150,
+                        height: 150,
+                        borderRadius: "50%",
+                        background: "#ccc",
+                        display: "inline-flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      No Image
+                    </div>
+                  )}
+
                   <p><strong>Name:</strong> {profile.name || "—"}</p>
                   <p><strong>Bio:</strong> {profile.bio || "—"}</p>
                   <p><strong>Skills:</strong> {profile.skills || "—"}</p>
+
+                  <hr style={{ margin: "1.5rem 0" }} />
+
+                  <CardTitle>Update Profile</CardTitle>
+                  <FormContainer
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const token = localStorage.getItem("token");
+                      await fetch(`${API_URL}/api/auth/profile`, {
+                        method: "PUT",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({
+                          name: profile.name,
+                          bio: profile.bio,
+                          seeker: { skills: profile.skills.split(",").map((s) => s.trim()) },
+                        }),
+                      });
+                      alert("Profile updated ✅");
+                    }}
+                  >
+                    <InputGroup>
+                      <Input
+                        placeholder="Headline"
+                        value={profile.name || ""}
+                        onChange={(e) =>
+                          setProfile({ ...profile, name: e.target.value })
+                        }
+                      />
+                    </InputGroup>
+
+                    <InputGroup>
+                      <Input
+                        as="textarea"
+                        rows={3}
+                        placeholder="Bio"
+                        value={profile.bio || ""}
+                        onChange={(e) =>
+                          setProfile({ ...profile, bio: e.target.value })
+                        }
+                      />
+                    </InputGroup>
+
+                    <InputGroup>
+                      <Input
+                        placeholder="Skills (comma-separated)"
+                        value={profile.skills || ""}
+                        onChange={(e) =>
+                          setProfile({ ...profile, skills: e.target.value })
+                        }
+                      />
+                    </InputGroup>
+
+                    <Button type="submit">Save Profile</Button>
+                  </FormContainer>
                 </div>
               )}
-
-              <hr style={{ margin: "1.5rem 0" }} />
-
-              <CardTitle>Update Profile</CardTitle>
-              <CardContent>
-                <FormContainer
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const token = localStorage.getItem("token");
-                    await fetch(`${API_URL}/api/auth/profile`, {
-                      method: "PUT",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({
-                        name: profile.name,
-                        bio: profile.bio,
-                        seeker: {
-                          skills: profile.skills.split(",").map((s) => s.trim()),
-                        },
-                      }),
-
-                    });
-                    alert("Profile updated ✅");
-                  }}
-                >
-                  <InputGroup>
-                    <Input
-                      placeholder="Headline"
-                      value={profile.name || ""}
-                      onChange={(e) =>
-                        setProfile({ ...profile, name: e.target.value })
-                      }
-                    />
-                  </InputGroup>
-
-                  <InputGroup>
-                    <Input
-                      as="textarea"
-                      rows={3}
-                      placeholder="Bio"
-                      value={profile.bio || ""}
-                      onChange={(e) =>
-                        setProfile({ ...profile, bio: e.target.value })
-                      }
-                    />
-                  </InputGroup>
-
-                  <InputGroup>
-                    <Input
-                      placeholder="Skills (comma-separated)"
-                      value={profile.skills || ""}
-                      onChange={(e) =>
-                        setProfile({ ...profile, skills: e.target.value })
-                      }
-                    />
-                  </InputGroup>
-
-                  <Button type="submit">Save Profile</Button>
-                </FormContainer>
-              </CardContent>
             </CardContent>
           </Card>
+
         );
 
 

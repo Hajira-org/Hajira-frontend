@@ -139,8 +139,8 @@ const Button = styled.button<ButtonProps>`
     disabled
       ? "#374151"
       : variant === "secondary"
-      ? "rgba(255,255,255,0.1)"
-      : "linear-gradient(90deg, #3b82f6, #06b6d4)"};
+        ? "rgba(255,255,255,0.1)"
+        : "linear-gradient(90deg, #3b82f6, #06b6d4)"};
 
   color: ${({ variant, disabled }) =>
     disabled ? "#9ca3af" : variant === "secondary" ? "#f9fafb" : "#fff"};
@@ -305,62 +305,104 @@ export default function SetupPage() {
     showToast(`Added "${newSkill}"`, "success");
   };
 
-  const handleSubmit = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found. Please login again.");
-  
-      // ✅ Build payload based on chosen role
-      const isPoster = form.role === "poster";
-      const payload = isPoster
-        ? {
-            role: "poster",
-            poster: {
-              company: form.company,
-              category: form.category,
-              bio: form.bio,
-              location: form.location,
-              avatar: form.avatar,
-            },
-          }
-        : {
-            role: "seeker",
-            seeker: {
-              age: Number(form.age),
-              skills: form.skills,
-              bio: form.bio,
-              location: form.location,
-              avatar: form.avatar,
-            },
-          };
-  
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-  
-      // 🧠 Log for debugging – remove later
-      console.log("Submitting payload:", payload);
-  
-      const res = await axios.post(`${API_URL}/api/auth/setup`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-  
-      // ✅ Ensure we store the correct role
-      const savedRole = res.data.role || form.role;
-      localStorage.setItem("role", savedRole);
-  
-      showToast("Profile setup complete!", "success");
-  
-      // ✅ Redirect based on actual role
-      setTimeout(() => {
-        router.push(savedRole === "poster" ? "/poster/dashboard" : "/dashboard");
-      }, 1500);
-    } catch (err: any) {
-      console.error("Setup error:", err.response?.data || err.message);
-      showToast(err.response?.data?.message || "Error saving profile", "error");
-    } finally {
-      setLoading(false);
+// ---------- Avatar Upload ----------
+const handleAvatarUpload = async (file: File) => {
+  if (!file) return;
+
+  const previewUrl = URL.createObjectURL(file);
+  setPreview(previewUrl);
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    setLoading(true);
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found. Please login again.");
+
+    const res = await axios.post(`${API_URL}/api/upload/avatar`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Save uploaded avatar URL
+    setForm((prev) => ({ ...prev, avatar: res.data.url }));
+    showToast("Avatar uploaded successfully", "success");
+  } catch (err: any) {
+    console.error("Upload error:", err.response?.data || err.message);
+    showToast(err.response?.data?.message || "Failed to upload avatar", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+// ---------- Profile Setup ----------
+const handleSubmit = async () => {
+  try {
+    setLoading(true);
+
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found. Please login again.");
+
+    const isPoster = form.role === "poster";
+    const payload = isPoster
+      ? {
+          role: "poster",
+          poster: {
+            company: form.company,
+            category: form.category,
+            bio: form.bio,
+            location: form.location,
+            avatar: form.avatar,
+          },
+        }
+      : {
+          role: "seeker",
+          seeker: {
+            age: Number(form.age),
+            skills: form.skills,
+            bio: form.bio,
+            location: form.location,
+            avatar: form.avatar,
+          },
+        };
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL 
+
+    const res = await axios.post(`${API_URL}/api/auth/setup`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const savedRole = res.data.role || form.role;
+    localStorage.setItem("role", savedRole);
+
+    showToast("Profile setup complete!", "success");
+
+    setTimeout(() => {
+      router.push(savedRole === "poster" ? "/poster/dashboard" : "/dashboard");
+    }, 1500);
+  } catch (err: any) {
+    console.error("Setup error:", err.response?.data || err.message);
+
+    if (err.response?.status === 401) {
+      showToast("Session expired. Please login again.", "error");
+      localStorage.removeItem("token");
+      router.push("/login");
+      return;
     }
-  };
+
+    showToast(err.response?.data?.message || "Error saving profile", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
   
   return (
     <PageWrapper>
@@ -432,15 +474,45 @@ export default function SetupPage() {
               <Input
                 type="file"
                 accept="image/*"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (file) {
-                    const url = URL.createObjectURL(file);
-                    setPreview(url);
-                    setForm({ ...form, avatar: url });
+                  if (!file) return;
+
+                  const url = URL.createObjectURL(file);
+                  setPreview(url);
+
+                  // Use the correct built-in class
+                  const formData = new FormData();
+                  formData.append("file", file);
+
+                  try {
+                    setLoading(true);
+                    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+                    const token = localStorage.getItem("token");
+                    if (!token) throw new Error("No token found. Please login again.");
+
+                    const res = await axios.post(`${API_URL}/api/upload/avatar`, formData, {
+                      headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: `Bearer ${token}`, // include token
+                      },
+                      
+                    });
+
+                    setForm((prev) => ({ ...prev, avatar: res.data.url }));
+                    console.log("Token:", token);
+                    showToast("Image uploaded successfully", "success");
+                  } catch (err: any) {
+                    console.error("Upload error:", err.response?.data || err.message);
+                    showToast("Failed to upload image", "error");
+                  } finally {
+                    setLoading(false);
                   }
+                  
+
                 }}
               />
+
 
               <Input
                 type="text"
