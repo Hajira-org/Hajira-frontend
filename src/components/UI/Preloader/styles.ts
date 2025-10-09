@@ -19,15 +19,15 @@ export const Wrapper = styled.div`
 
 export const Inner = styled.div`
   display: flex;
-  gap: 2em;
+  gap: 1.7em;
   align-items: center;
   padding: 0 2em;
   overflow: hidden;
   height: 20em;
 
   img {
-    width: 15em;
-    height: 25em;
+    width: 10em;
+    height: 20em;
   }
 
   div {
@@ -37,7 +37,7 @@ export const Inner = styled.div`
 
     div {
       font-weight: 600;
-      font-size: 20em;
+      font-size: 15em;
     }
   }
 

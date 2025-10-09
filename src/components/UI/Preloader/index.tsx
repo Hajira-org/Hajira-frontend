@@ -23,7 +23,7 @@ const Preloader = ({
     tl.to(imageRef.current, {
       rotate: '360deg',
       ease: 'back.out(1.7)', // Easing function
-      duration: 1.4,
+      duration: 1.3,
     });
     tl.to(imageRef.current, {
       y: '-100%', // Move the spans up

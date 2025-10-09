@@ -42,6 +42,16 @@ export default function PosterDashboardPage() {
     workModel: "Flexible",
     image: "",
   });
+  const [editingJob, setEditingJob] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    location: "",
+    salary: "",
+    requirements: "",
+    workModel: "Flexible",
+    image: "",
+  });
 
   const [jobImageFile, setJobImageFile] = useState<File | null>(null);
 
@@ -120,34 +130,34 @@ export default function PosterDashboardPage() {
   };
   useEffect(() => {
     if (activePage !== "home") return;
-  
+
     let map: any;
-  
+
     const initMap = async () => {
       const L = await import("leaflet");
       const mapContainer = document.getElementById("userMap");
-  
+
       if (!mapContainer) return;
       if (mapContainer.getAttribute("data-initialized")) return;
       mapContainer.setAttribute("data-initialized", "true");
-  
+
       map = L.map(mapContainer).setView([-1.286389, 36.817223], 12);
-  
+
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: "© OpenStreetMap contributors",
       }).addTo(map);
-  
+
       // 🔁 Force Leaflet to recalc dimensions
       setTimeout(() => map.invalidateSize(), 500);
-  
+
       const success = (pos: GeolocationPosition) => {
         const { latitude, longitude } = pos.coords;
         console.log("📍 Location found:", latitude, longitude);
         map.flyTo([latitude, longitude], 14);
         L.marker([latitude, longitude]).addTo(map).bindPopup("📍 You are here").openPopup();
       };
-  
+
       const error = async (err: GeolocationPositionError) => {
         console.warn("❌ Geolocation error:", err.message);
         try {
@@ -162,21 +172,21 @@ export default function PosterDashboardPage() {
           console.warn("❌ IP fallback failed:", e);
         }
       };
-  
+
       navigator.geolocation.getCurrentPosition(success, error, {
         enableHighAccuracy: true,
         timeout: 30000,
         maximumAge: 0,
       });
     };
-  
+
     initMap();
     return () => {
       if (map) map.remove();
     };
   }, [activePage]);
-  
-  
+
+
 
   useEffect(() => {
     if (activePage === "home" || activePage === "myJobs") {
@@ -520,19 +530,19 @@ export default function PosterDashboardPage() {
           <>
             {activePage === "home" && (
               <div
-              id="userMap"
-              style={{
-                width: '100%',
-                height: '400px',
-                borderRadius: '0.75rem',
-                overflow: 'hidden',
-                marginBottom: '1.5rem',
-                border: '1px solid rgb(51,65,85)',
-                zIndex: 1,
-                backgroundColor: '#0f172a', // match your dark theme
-              }}
-            />
-            
+                id="userMap"
+                style={{
+                  width: '100%',
+                  height: '400px',
+                  borderRadius: '0.75rem',
+                  overflow: 'hidden',
+                  marginBottom: '1.5rem',
+                  border: '1px solid rgb(51,65,85)',
+                  zIndex: 1,
+                  backgroundColor: '#0f172a', // match your dark theme
+                }}
+              />
+
 
 
             )}
@@ -619,15 +629,146 @@ export default function PosterDashboardPage() {
                   >
                     👥 {showApplicantsMap[job._id] ? "Hide Applicants" : "View Applicants"}
                   </Button>
+                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap:"20px" }}>
+                    <Button
+                      type="button"
+                      style={{ backgroundColor: "#22c55e", padding: "0.5rem 0.9rem" }}
+                      onClick={() => {
+                        setEditingJob(job);
+                        setEditForm({
+                          title: job.title || "",
+                          description: job.description || "",
+                          location: job.location || "",
+                          salary: job.salary || "",
+                          requirements: job.requirements?.join(", ") || "",
+                          workModel: job.workModel || "Flexible",
+                          image: job.image || "",
+                        });
+                      }}
+                    >
+                      ✏️ Edit
+                    </Button>
 
-                  <Button
-                    type="button"
-                    style={{ backgroundColor: "#ef4444", padding: "0.5rem 0.9rem" }}
-                    onClick={() => handleDeleteJob(job._id)}
-                  >
-                    🗑️ Delete
-                  </Button>
+                    <Button
+                      type="button"
+                      style={{ backgroundColor: "#ef4444", padding: "0.5rem 0.9rem" }}
+                      onClick={() => handleDeleteJob(job._id)}
+                    >
+                      🗑️ Delete
+                    </Button>
+
+                  </div>
+
                 </CardActions>
+                {editingJob && editingJob._id === job._id && (
+                  <div
+                    style={{
+                      marginTop: "1rem",
+                      background: "#0f172a",
+                      padding: "1rem",
+                      borderRadius: "0.5rem",
+                    }}
+                  >
+                    <h4 style={{ marginBottom: "1rem" }}>Edit Job</h4>
+
+                    <FormContainer
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        const token = localStorage.getItem("token");
+
+                        const res = await fetch(`${API_URL}/api/jobs/${editingJob._id}`, {
+                          method: "PUT",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({
+                            ...editForm,
+                            requirements: editForm.requirements
+                              ? editForm.requirements.split(",").map((r) => r.trim())
+                              : [],
+                          }),
+                        });
+
+                        const data = await res.json();
+                        if (res.ok) {
+                          alert("✅ Job updated successfully!");
+                          setEditingJob(null);
+                          fetchJobs();
+                        } else {
+                          alert(`❌ ${data.message || "Failed to update job."}`);
+                        }
+                      }}
+                    >
+                      <Input
+                        placeholder="Title"
+                        value={editForm.title}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, title: e.target.value })
+                        }
+                      />
+
+                      <Input
+                        as="textarea"
+                        rows={3}
+                        placeholder="Description"
+                        value={editForm.description}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, description: e.target.value })
+                        }
+                      />
+
+                      <Input
+                        placeholder="Location"
+                        value={editForm.location}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, location: e.target.value })
+                        }
+                      />
+
+                      <Input
+                        placeholder="Salary"
+                        value={editForm.salary}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, salary: e.target.value })
+                        }
+                      />
+
+                      <Input
+                        placeholder="Requirements (comma-separated)"
+                        value={editForm.requirements}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, requirements: e.target.value })
+                        }
+                      />
+
+                      <Select
+                        value={editForm.workModel}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, workModel: e.target.value })
+                        }
+                      >
+                        <option value="Flexible">Flexible</option>
+                        <option value="Same Day">Same Day</option>
+                        <option value="Scheduled">Scheduled</option>
+                      </Select>
+
+                      <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
+                        <Button type="submit" style={{ backgroundColor: "#3b82f6" }}>
+                          Save Changes
+                        </Button>
+                        <Button
+                          type="button"
+                          style={{ backgroundColor: "#64748b" }}
+                          onClick={() => setEditingJob(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </FormContainer>
+                  </div>
+                )}
+
 
                 {/* Applicants list */}
                 {showApplicantsMap[job._id] && (
