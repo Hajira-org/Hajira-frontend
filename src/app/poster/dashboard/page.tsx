@@ -17,7 +17,7 @@ import {
   CardActions,
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
-
+import toast from "react-hot-toast";
 
 
 
@@ -58,6 +58,44 @@ export default function PosterDashboardPage() {
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [showApplicantsMap, setShowApplicantsMap] = useState<Record<string, boolean>>({});
+  // Add these state variables near the top:
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+
+  // Automatically get current location
+  useEffect(() => {
+    if (activePage === "createJob") {
+      setDetectingLocation(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log("✅ Got location:", latitude, longitude);
+          setCoords({ lat: latitude, lng: longitude });
+          setDetectingLocation(false);
+        },
+        (error) => {
+          console.error("❌ Geolocation error:", error.message);
+          toast.error("Unable to fetch location. Using IP-based location instead.");
+          fetch("https://ipapi.co/json")
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.latitude && data.longitude) {
+                console.log("🌍 Fallback IP location:", data.latitude, data.longitude);
+                setCoords({ lat: data.latitude, lng: data.longitude });
+              }
+            })
+            .finally(() => setDetectingLocation(false));
+        },
+        {
+          timeout: 20000,
+          maximumAge: 0,
+          enableHighAccuracy: true,
+        }
+      );
+    }
+  }, [activePage]);
+  
+
 
   // ---------------- JOB TYPES ----------------
   const [jobTypes, setJobTypes] = useState([
@@ -332,7 +370,7 @@ export default function PosterDashboardPage() {
                     <p><strong>Skills:</strong> {profile.skills || "—"}</p>
                   </div>
 
-                  <div style={{ marginBottom: "1rem",}}>
+                  <div style={{ marginBottom: "1rem", }}>
                     <label>Change Profile Picture:</label>
                     <Input
                       type="file"
@@ -471,8 +509,20 @@ export default function PosterDashboardPage() {
                       requirements: form.requirements
                         ? form.requirements.split(",").map(r => r.trim())
                         : [],
+                        latitude: coords ? coords.lat : null,
+                        longitude: coords ? coords.lng : null,
                     }),
+                    
                   });
+                  console.log("📦 Sending job data:", {
+                    title: form.title,
+                    description: form.description,
+                    salary: form.salary,
+                    location: form.location,
+                    latitude: coords?.lat,
+                    longitude: coords?.lng,
+                  });
+                  
 
                   const data = await res.json();
 

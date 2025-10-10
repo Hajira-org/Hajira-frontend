@@ -16,6 +16,22 @@ import {
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
 import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+
+import icon2x from "leaflet/dist/images/marker-icon-2x.png";
+import icon from "leaflet/dist/images/marker-icon.png";
+import shadow from "leaflet/dist/images/marker-shadow.png";
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: icon2x.src,
+  iconUrl: icon.src,
+  shadowUrl: shadow.src,
+});
+
+
+
 
 // ---------------- Types ----------------
 interface Poster {
@@ -31,6 +47,10 @@ interface Job {
   poster: Poster;
   location: string;
   requirements?: string[];
+  geoLocation?: {
+    type: "Point";
+    coordinates: [number, number]; // [longitude, latitude]
+  };
   salary?: string;
   workModel?: string;
   status?: string;
@@ -44,11 +64,14 @@ export default function SeekerDashboardPage() {
   const [profile, setProfile] = useState({ name: "", bio: "", skills: "", avatar: "" });
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" }); // ✅ added
   const logout = useLogout();
-  const [logoFile, setLogoFile] = useState<File | null>(null);
 
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
+  useEffect(() => {
+    if (jobs.length > 0) {
+      console.log("Raw jobs data from API:", jobs);
+    }
+  }, [jobs]);
   // ---------------- Fetch jobs from backend ----------------
   const fetchJobs = async () => {
     try {
@@ -63,93 +86,97 @@ export default function SeekerDashboardPage() {
     }
   };
 
-  const uploadFile = async (file: File): Promise<string | null> => {
-    if (!file) return null;
-    try {
-      const token = localStorage.getItem("token");
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch(`${API_URL}/api/upload/avatar`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      return data.url || null;
-    } catch (err) {
-      console.error("File upload error:", err);
-      alert("❌ File upload failed.");
-      return null;
-    }
-  };
-
   useEffect(() => {
     if (activePage === "home" || activePage === "applied") {
       fetchJobs();
     }
   }, [activePage]);
   // ---------------- Map initialization for Home ----------------
+  // 🗺️ Show job markers on the map
   useEffect(() => {
-    if (activePage !== "home") return;
+    if (activePage !== "home" || jobs.length === 0) return;
 
-    let map: any;
+    (async () => {
 
-    const initMap = async () => {
-      const L = await import("leaflet");
       const mapContainer = document.getElementById("userMap");
-
       if (!mapContainer) return;
-      if (mapContainer.getAttribute("data-initialized")) return;
-      mapContainer.setAttribute("data-initialized", "true");
 
-      map = L.map(mapContainer).setView([-1.286389, 36.817223], 12);
+      // ✅ Reuse map if it already exists
+      // @ts-ignore
+      let map = mapContainer._leaflet_map;
+      if (!map) {
+        map = L.map(mapContainer).setView([-1.286389, 36.817223], 10); // Default Nairobi
+        // @ts-ignore
+        mapContainer._leaflet_map = map;
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "© OpenStreetMap contributors",
-      }).addTo(map);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors",
+        }).addTo(map);
+      }
 
-      // 🔁 Force Leaflet to recalc dimensions
-      setTimeout(() => map.invalidateSize(), 500);
+      // Clear old markers
+      if ((map as any)._jobMarkersLayer) {
+        (map as any)._jobMarkersLayer.clearLayers();
+      }
 
-      const success = (pos: GeolocationPosition) => {
-        const { latitude, longitude } = pos.coords;
-        console.log("📍 Location found:", latitude, longitude);
-        map.flyTo([latitude, longitude], 14);
-        L.marker([latitude, longitude]).addTo(map).bindPopup("📍 You are here").openPopup();
-      };
+      const markersLayer = L.layerGroup().addTo(map);
+      (map as any)._jobMarkersLayer = markersLayer;
 
-      const error = async (err: GeolocationPositionError) => {
-        console.warn("❌ Geolocation error:", err.message);
-        try {
-          const res = await fetch("https://ipapi.co/json/", { cache: "no-store" });
-          const loc = await res.json();
-          map.setView([loc.latitude, loc.longitude], 13);
-          L.marker([loc.latitude, loc.longitude])
-            .addTo(map)
-            .bindPopup(`📍 Approx. location: ${loc.city}`)
-            .openPopup();
-        } catch (e) {
-          console.warn("❌ IP fallback failed:", e);
+      const allLatLngs: L.LatLngExpression[] = [];
+
+      // ✅ Add job markers
+      jobs.forEach(job => {
+        if (job.geoLocation?.coordinates?.length === 2) {
+          const [lng, lat] = job.geoLocation.coordinates;
+          console.log("Placing marker for:", job.title, job.geoLocation?.coordinates);
+          const marker = L.marker([lat, lng]).addTo(markersLayer);
+          marker.bindPopup(`
+          <strong>${job.title}</strong><br/>
+          ${job.location || "Unknown location"}<br/>
+          💰 ${job.salary || "—"}<br/>
+          🧍 ${job.poster?.name || "Unknown"}
+        `);
+          allLatLngs.push([lat, lng]);
         }
-      };
-
-      navigator.geolocation.getCurrentPosition(success, error, {
-        enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 0,
       });
-    };
+      console.log("Jobs loaded for map:", jobs.map(j => j.geoLocation?.coordinates));
+      // ✅ Add user location if available
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const { latitude, longitude } = pos.coords;
+            const userMarker = L.marker([latitude, longitude], {
+              title: "You are here",
+            }).addTo(markersLayer);
+            userMarker.bindPopup("<strong>Your Location</strong>");
+            allLatLngs.push([latitude, longitude]);
 
-    initMap();
-    return () => {
-      if (map) map.remove();
-    };
-  }, [activePage]);
-
+            // ✅ Center map to include all markers
+            if (allLatLngs.length > 0) {
+              const group = L.featureGroup(allLatLngs.map(coords => L.marker(coords)));
+              map.fitBounds(group.getBounds(), { padding: [50, 50] });
+            } else {
+              map.setView([latitude, longitude], 13);
+            }
+          },
+          (err) => {
+            console.warn("Could not get user location:", err);
+            if (allLatLngs.length > 0) {
+              const group = L.featureGroup(allLatLngs.map(coords => L.marker(coords)));
+              map.fitBounds(group.getBounds(), { padding: [50, 50] });
+            } else {
+              map.setView([-1.286389, 36.817223], 10); // fallback to Nairobi
+            }
+          }
+        );
+      } else if (allLatLngs.length > 0) {
+        const group = L.featureGroup(allLatLngs.map(coords => L.marker(coords)));
+        map.fitBounds(group.getBounds(), { padding: [50, 50] });
+      } else {
+        map.setView([-1.286389, 36.817223], 10); // fallback to Nairobi
+      }
+    })();
+  }, [jobs, activePage]);
 
 
   //----------------Fetch User to display on the profile page -----------//
@@ -228,62 +255,12 @@ export default function SeekerDashboardPage() {
                     </div>
                   )}
 
-                  <p>
-                    <strong>Name:</strong> {profile.name || "—"}
-                  </p>
-                  <p>
-                    <strong>Bio:</strong> {profile.bio || "—"}
-                  </p>
-                  <p>
-                    <strong>Skills:</strong> {profile.skills || "—"}
-                  </p>
+                  <p><strong>Name:</strong> {profile.name || "—"}</p>
+                  <p><strong>Bio:</strong> {profile.bio || "—"}</p>
+                  <p><strong>Skills:</strong> {profile.skills || "—"}</p>
 
                   <hr style={{ margin: "1.5rem 0" }} />
 
-                  {/* Profile picture section */}
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label>Change Profile Picture:</label>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) setLogoFile(e.target.files[0]);
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      style={{ marginTop: "0.5rem", backgroundColor: "#3b82f6" }}
-                      onClick={async () => {
-                        if (!logoFile) {
-                          alert("Please select an image first.");
-                          return;
-                        }
-                        const url = await uploadFile(logoFile);
-                        if (url) {
-                          const token = localStorage.getItem("token");
-                          const res = await fetch(`${API_URL}/api/auth/profile`, {
-                            method: "PUT",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ avatar: url }),
-                          });
-                          if (res.ok) {
-                            alert("✅ Profile picture updated!");
-                            setProfile((prev) => ({ ...prev, avatar: url }));
-                            setLogoFile(null);
-                          } else {
-                            alert("❌ Failed to update avatar.");
-                          }
-                        }
-                      }}
-                    >
-                      Upload Avatar
-                    </Button>
-                  </div>
-
-                  {/* Update profile form */}
                   <CardTitle>Update Profile</CardTitle>
                   <FormContainer
                     onSubmit={async (e) => {
@@ -298,11 +275,7 @@ export default function SeekerDashboardPage() {
                         body: JSON.stringify({
                           name: profile.name,
                           bio: profile.bio,
-                          seeker: {
-                            skills: profile.skills
-                              .split(",")
-                              .map((s) => s.trim()),
-                          },
+                          seeker: { skills: profile.skills.split(",").map((s) => s.trim()) },
                         }),
                       });
                       alert("Profile updated ✅");
@@ -342,12 +315,10 @@ export default function SeekerDashboardPage() {
 
                     <Button type="submit">Save Profile</Button>
                   </FormContainer>
-                </div> 
+                </div>
               )}
             </CardContent>
           </Card>
-
-
 
         );
 
