@@ -44,6 +44,7 @@ export default function SeekerDashboardPage() {
   const [profile, setProfile] = useState({ name: "", bio: "", skills: "", avatar: "" });
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" }); // ✅ added
   const logout = useLogout();
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -59,6 +60,29 @@ export default function SeekerDashboardPage() {
       setJobs(data.jobs || []);
     } catch (err) {
       console.error("Error fetching jobs:", err);
+    }
+  };
+
+  const uploadFile = async (file: File): Promise<string | null> => {
+    if (!file) return null;
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`${API_URL}/api/upload/avatar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      return data.url || null;
+    } catch (err) {
+      console.error("File upload error:", err);
+      alert("❌ File upload failed.");
+      return null;
     }
   };
 
@@ -204,12 +228,62 @@ export default function SeekerDashboardPage() {
                     </div>
                   )}
 
-                  <p><strong>Name:</strong> {profile.name || "—"}</p>
-                  <p><strong>Bio:</strong> {profile.bio || "—"}</p>
-                  <p><strong>Skills:</strong> {profile.skills || "—"}</p>
+                  <p>
+                    <strong>Name:</strong> {profile.name || "—"}
+                  </p>
+                  <p>
+                    <strong>Bio:</strong> {profile.bio || "—"}
+                  </p>
+                  <p>
+                    <strong>Skills:</strong> {profile.skills || "—"}
+                  </p>
 
                   <hr style={{ margin: "1.5rem 0" }} />
 
+                  {/* Profile picture section */}
+                  <div style={{ marginBottom: "1rem" }}>
+                    <label>Change Profile Picture:</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) setLogoFile(e.target.files[0]);
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      style={{ marginTop: "0.5rem", backgroundColor: "#3b82f6" }}
+                      onClick={async () => {
+                        if (!logoFile) {
+                          alert("Please select an image first.");
+                          return;
+                        }
+                        const url = await uploadFile(logoFile);
+                        if (url) {
+                          const token = localStorage.getItem("token");
+                          const res = await fetch(`${API_URL}/api/auth/profile`, {
+                            method: "PUT",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ avatar: url }),
+                          });
+                          if (res.ok) {
+                            alert("✅ Profile picture updated!");
+                            setProfile((prev) => ({ ...prev, avatar: url }));
+                            setLogoFile(null);
+                          } else {
+                            alert("❌ Failed to update avatar.");
+                          }
+                        }
+                      }}
+                    >
+                      Upload Avatar
+                    </Button>
+                  </div>
+
+                  {/* Update profile form */}
                   <CardTitle>Update Profile</CardTitle>
                   <FormContainer
                     onSubmit={async (e) => {
@@ -224,7 +298,11 @@ export default function SeekerDashboardPage() {
                         body: JSON.stringify({
                           name: profile.name,
                           bio: profile.bio,
-                          seeker: { skills: profile.skills.split(",").map((s) => s.trim()) },
+                          seeker: {
+                            skills: profile.skills
+                              .split(",")
+                              .map((s) => s.trim()),
+                          },
                         }),
                       });
                       alert("Profile updated ✅");
@@ -264,10 +342,12 @@ export default function SeekerDashboardPage() {
 
                     <Button type="submit">Save Profile</Button>
                   </FormContainer>
-                </div>
+                </div> 
               )}
             </CardContent>
           </Card>
+
+
 
         );
 

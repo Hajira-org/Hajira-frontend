@@ -245,7 +245,7 @@ export default function PosterDashboardPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(`${API_URL}/api/upload`, {
+      const res = await fetch(`${API_URL}/api/upload/avatar`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -296,40 +296,84 @@ export default function PosterDashboardPage() {
             <CardTitle>Your Profile</CardTitle>
             <CardContent>
               {profile && (
-                <div style={{ marginBottom: "1.5rem" }}>
-                  {profile.avatar ? (
-                    <img
-                      src={profile.avatar}
-                      alt="User Avatar"
-                      style={{
-                        width: 150,
-                        height: 150,
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        marginBottom: "1rem",
+                <>
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    {profile.avatar ? (
+                      <img
+                        src={profile.avatar}
+                        alt="User Avatar"
+                        style={{
+                          width: 150,
+                          height: 150,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          marginBottom: "1rem",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: 150,
+                          height: 150,
+                          borderRadius: "50%",
+                          background: "#ccc",
+                          display: "inline-flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          marginBottom: "1rem",
+                        }}
+                      >
+                        No Image
+                      </div>
+                    )}
+
+                    <p><strong>Name:</strong> {profile.name || "—"}</p>
+                    <p><strong>Bio:</strong> {profile.bio || "—"}</p>
+                    <p><strong>Skills:</strong> {profile.skills || "—"}</p>
+                  </div>
+
+                  <div style={{ marginBottom: "1rem",}}>
+                    <label>Change Profile Picture:</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) setLogoFile(e.target.files[0]);
                       }}
                     />
-                  ) : (
-                    <div
-                      style={{
-                        width: 150,
-                        height: 150,
-                        borderRadius: "50%",
-                        background: "#ccc",
-                        display: "inline-flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        marginBottom: "1rem",
+                    <Button
+                      type="button"
+                      style={{ marginTop: "0.5rem", backgroundColor: "#3b82f6" }}
+                      onClick={async () => {
+                        if (!logoFile) {
+                          alert("Please select an image first.");
+                          return;
+                        }
+                        const url = await uploadFile(logoFile);
+                        if (url) {
+                          const token = localStorage.getItem("token");
+                          const res = await fetch(`${API_URL}/api/auth/profile`, {
+                            method: "PUT",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ avatar: url }),
+                          });
+                          if (res.ok) {
+                            alert("✅ Profile picture updated!");
+                            setProfile((prev) => ({ ...prev, avatar: url }));
+                            setLogoFile(null);
+                          } else {
+                            alert("❌ Failed to update avatar.");
+                          }
+                        }
                       }}
                     >
-                      No Image
-                    </div>
-                  )}
-
-                  <p><strong>Name:</strong> {profile.name || "—"}</p>
-                  <p><strong>Bio:</strong> {profile.bio || "—"}</p>
-                  <p><strong>Skills:</strong> {profile.skills || "—"}</p>
-                </div>
+                      Upload Avatar
+                    </Button>
+                  </div>
+                </>
               )}
 
               <hr style={{ margin: "1.5rem 0" }} />
