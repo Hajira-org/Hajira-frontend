@@ -44,6 +44,8 @@ export default function SigninPage() {
       } else {
         localStorage.setItem('token', data.token);
 
+        window.dispatchEvent(new Event('login'));
+
         toast.success('Login successful!');
 
         if (data.user?.role?.toLowerCase() === 'poster') {
