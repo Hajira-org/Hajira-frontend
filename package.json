@@ -36,5 +36,9 @@
   },
   "engines": {
     "node": "20.x"
+  },
+  "optionalDependencies": {
+    "bufferutil": "*",
+    "utf-8-validate": "*"
   }
 }

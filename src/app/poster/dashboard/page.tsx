@@ -1048,7 +1048,7 @@ export default function PosterDashboardPage() {
             setChatOpen(false);
             setSelectedApplicant(null);
           }}
-          roomId={`room_${currentUser._id}_${selectedApplicant._id}`}   // 👈 consistent room naming
+          
           sender={currentUser._id}
           receiver={selectedApplicant._id}
         />

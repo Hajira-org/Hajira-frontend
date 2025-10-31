@@ -613,7 +613,7 @@ export default function SeekerDashboardPage() {
             setChatOpen(false);
             setSelectedPoster(null);
           }}
-          roomId={`room_${currentUser._id}_${selectedPoster._id}`}   // ✅ consistent format
+
           sender={currentUser._id}
           receiver={selectedPoster._id}
         />
