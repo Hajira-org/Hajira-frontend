@@ -1,5 +1,6 @@
 import { useState, useEffect, FC, useRef } from "react";
 import { io, Socket } from "socket.io-client";
+import { motion, AnimatePresence } from "framer-motion";
 
 const socket: Socket = io("http://localhost:4000");
 
@@ -38,18 +39,13 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
         ? `room_${sender}_${receiver}`
         : `room_${receiver}_${sender}`;
 
-    console.log("Joining room:", roomKey);
     socket.emit("joinRoom", roomKey);
 
-    // ✅ Handle chat history
     const handleMessageHistory = (history: Message[]) => {
-      console.log("📜 Loaded message history:", history);
       setMessages(history);
     };
 
-    // ✅ Handle incoming messages
     const handleReceiveMessage = (data: Message) => {
-      console.log("📩 Received message:", data);
       setMessages((prev) => [...prev, data]);
     };
 
@@ -87,6 +83,17 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
   };
 
   if (!open) return null;
+
+  // Framer motion variants for shake/pop
+  const messageVariants = {
+    hidden: { y: -20, rotate: -5, opacity: 0 },
+    visible: {
+      y: 0,
+      rotate: [5, -3, 2, 0], // wiggly effect
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 12 },
+    },
+  };
 
   return (
     <div
@@ -135,35 +142,40 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
           background: "#f9fafb",
         }}
       >
-        {messages.map((m, i) => {
-          const isSender = m.sender === sender;
-          return (
-            <div
-              key={i}
-              style={{
-                margin: "0.5rem 0",
-                textAlign: isSender ? "right" : "left",
-              }}
-            >
-              <strong>{isSender ? "You" : "Them"}</strong>
-              <div
+        <AnimatePresence initial={false}>
+          {messages.map((m, i) => {
+            const isSender = m.sender === sender;
+            return (
+              <motion.div
+                key={i}
+                variants={messageVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0 }}
                 style={{
-                  background: isSender ? "#22c55e" : "#a855f7",
-                  color: "black",
-                  borderRadius: "10px",
-                  padding: "0.5rem",
-                  marginTop: "0.2rem",
-                  display: "inline-block",
-                  maxWidth: "80%",
-                  wordWrap: "break-word",
+                  margin: "0.5rem 0",
+                  textAlign: isSender ? "right" : "left",
                 }}
               >
-                {m.message}
-              </div>
-            </div>
-          );
-        })}
-        {/* Dummy div to scroll to */}
+                <strong>{isSender ? "You" : "Them"}</strong>
+                <div
+                  style={{
+                    background: isSender ? "#22c55e" : "#a855f7",
+                    color: "black",
+                    borderRadius: "10px",
+                    padding: "0.5rem",
+                    marginTop: "0.2rem",
+                    display: "inline-block",
+                    maxWidth: "80%",
+                    wordWrap: "break-word",
+                  }}
+                >
+                  {m.message}
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
         <div ref={messagesEndRef} />
       </div>
 
