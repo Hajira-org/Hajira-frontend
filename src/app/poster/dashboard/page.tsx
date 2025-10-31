@@ -1,6 +1,7 @@
 'use client';
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect } from 'react';
+import ChatPopup from "@/components/chatPopup";
 import {
   DashboardWrapper,
   Sidebar,
@@ -31,6 +32,10 @@ export default function PosterDashboardPage() {
   const logout = useLogout();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
 
 
   // ---------------- JOB FORM ----------------
@@ -94,7 +99,7 @@ export default function PosterDashboardPage() {
       );
     }
   }, [activePage]);
-  
+
 
 
   // ---------------- JOB TYPES ----------------
@@ -260,6 +265,8 @@ export default function PosterDashboardPage() {
           skills: (seeker.skills || []).join(", "),
           avatar,
         });
+
+        setCurrentUser(data.user);
       } catch (err) {
         console.error("Error fetching user:", err);
       }
@@ -509,10 +516,10 @@ export default function PosterDashboardPage() {
                       requirements: form.requirements
                         ? form.requirements.split(",").map(r => r.trim())
                         : [],
-                        latitude: coords ? coords.lat : null,
-                        longitude: coords ? coords.lng : null,
+                      latitude: coords ? coords.lat : null,
+                      longitude: coords ? coords.lng : null,
                     }),
-                    
+
                   });
                   console.log("📦 Sending job data:", {
                     title: form.title,
@@ -522,7 +529,7 @@ export default function PosterDashboardPage() {
                     latitude: coords?.lat,
                     longitude: coords?.lng,
                   });
-                  
+
 
                   const data = await res.json();
 
@@ -914,21 +921,38 @@ export default function PosterDashboardPage() {
                             marginBottom: "0.8rem",
                             borderBottom: "1px solid #334155",
                             paddingBottom: "0.5rem",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                           }}
                         >
-                          <p>
-                            👤 Applicant:{" "}
-                            {app.applicant?.name
-                              ? `${app.applicant.name} (${app.applicant.email})`
-                              : app.applicant?._id || "Unknown"}
-                          </p>
-                          <p>💰 Bid: {app.bid}</p>
-                          <p>🕒 Applied At: {new Date(app.appliedAt).toLocaleString()}</p>
+                          <div>
+                            <p>
+                              👤 Applicant:{" "}
+                              {app.applicant?.name
+                                ? `${app.applicant.name} (${app.applicant.email})`
+                                : app.applicant?._id || "Unknown"}
+                            </p>
+                            <p>💰 Bid: {app.bid}</p>
+                            <p>🕒 Applied At: {new Date(app.appliedAt).toLocaleString()}</p>
+                          </div>
+
+                          <Button
+                            type="button"
+                            style={{ backgroundColor: "#3b82f6", padding: "0.4rem 0.8rem" }}
+                            onClick={() => {
+                              setSelectedApplicant(app.applicant);
+                              setChatOpen(true);
+                            }}
+                          >
+                            💬 Chat
+                          </Button>
                         </div>
                       ))
                     ) : (
                       <p style={{ color: "#94a3b8" }}>No applications yet.</p>
                     )}
+
                   </div>
                 )}
               </Card>
@@ -1017,6 +1041,20 @@ export default function PosterDashboardPage() {
       </Sidebar>
 
       <MainContent>{renderPage()}</MainContent>
+      {chatOpen && selectedApplicant && currentUser && (
+        <ChatPopup
+          open={chatOpen}
+          onClose={() => {
+            setChatOpen(false);
+            setSelectedApplicant(null);
+          }}
+          roomId={`room_${currentUser._id}_${selectedApplicant._id}`}   // 👈 consistent room naming
+          sender={currentUser._id}
+          receiver={selectedApplicant._id}
+        />
+      )}
+
+
     </DashboardWrapper>
   );
 }

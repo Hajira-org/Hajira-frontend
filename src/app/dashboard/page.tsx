@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import ChatPopup from '@/components/chatPopup';
 import {
   DashboardWrapper,
   Sidebar,
@@ -64,6 +65,10 @@ export default function SeekerDashboardPage() {
   const [profile, setProfile] = useState({ name: "", bio: "", skills: "", avatar: "" });
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" }); // ✅ added
   const logout = useLogout();
+  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedPoster, setSelectedPoster] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
 
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -204,6 +209,8 @@ export default function SeekerDashboardPage() {
           skills: (seeker.skills || []).join(", "),
           avatar,
         });
+
+        setCurrentUser(data.user); // ✅ Save the logged-in seeker
       } catch (err) {
         console.error("Error fetching user:", err);
       }
@@ -329,20 +336,55 @@ export default function SeekerDashboardPage() {
           <Card>
             <CardTitle>Applied Jobs</CardTitle>
             <CardContent>
-              {jobs.filter(j => j.applied).length === 0 ? (
+              {jobs.filter((j) => j.applied).length === 0 ? (
                 <p>You have not applied for any jobs yet or the jobs have been completed.</p>
               ) : (
-                <ul>
-                  {jobs.filter(j => j.applied).map(job => (
-                    <li key={job._id}>
-                      {job.title} at {job.poster?.name || "Unknown"} ({job.location})
-                    </li>
-                  ))}
+                <ul style={{ listStyle: "none", padding: 0 }}>
+                  {jobs
+                    .filter((j) => j.applied)
+                    .map((job) => (
+                      <li
+                        key={job._id}
+                        style={{
+                          background: "#1e293b",
+                          color: "#f1f5f9",
+                          padding: "1rem",
+                          borderRadius: "0.5rem",
+                          marginBottom: "1rem",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div>
+                          <strong>{job.title}</strong> at {job.poster?.name || "Unknown"} (
+                          {job.location})
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedPoster(job.poster);
+                            setChatOpen(true);
+                          }}
+                          style={{
+                            backgroundColor: "#3b82f6",
+                            color: "#fff",
+                            border: "none",
+                            padding: "0.5rem 0.8rem",
+                            borderRadius: "0.4rem",
+                            cursor: "pointer",
+                            fontWeight: 600,
+                          }}
+                        >
+                          💬 Chat
+                        </button>
+                      </li>
+                    ))}
                 </ul>
               )}
             </CardContent>
           </Card>
         );
+
 
       // ---------------- SETTINGS (Updated with Change Password) ----------------
       case "settings":
@@ -563,6 +605,21 @@ export default function SeekerDashboardPage() {
       </Sidebar>
 
       <MainContent>{renderPage()}</MainContent>
+
+      {chatOpen && selectedPoster && currentUser && (
+        <ChatPopup
+          open={chatOpen}
+          onClose={() => {
+            setChatOpen(false);
+            setSelectedPoster(null);
+          }}
+          roomId={`room_${currentUser._id}_${selectedPoster._id}`}   // ✅ consistent format
+          sender={currentUser._id}
+          receiver={selectedPoster._id}
+        />
+      )}
+
+
     </DashboardWrapper>
   );
 }
