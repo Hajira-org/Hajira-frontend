@@ -32,7 +32,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
     if (typeof window === "undefined") return; // only run on client
 
     const io = require("socket.io-client");
-    const s: Socket = io(process.env.NEXT_PUBLIC_API_BACKEND_URL || "https://hajira-backend.onrender.com/" );
+    const s: Socket = io(process.env.NEXT_PUBLIC_API_BACKEND_URL);
     setSocket(s);
 
     return () => {
