@@ -16,23 +16,10 @@ import {
   Input
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
 
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-
-import icon2x from "leaflet/dist/images/marker-icon-2x.png";
-import icon from "leaflet/dist/images/marker-icon.png";
-import shadow from "leaflet/dist/images/marker-shadow.png";
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: icon2x.src,
-  iconUrl: icon.src,
-  shadowUrl: shadow.src,
-});
-
-
-
+// ✅ Disable static generation for this page
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
 
 // ---------------- Types ----------------
 interface Poster {
@@ -63,20 +50,21 @@ export default function SeekerDashboardPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [search, setSearch] = useState('');
   const [profile, setProfile] = useState({ name: "", bio: "", skills: "", avatar: "" });
-  const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" }); // ✅ added
+  const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" });
   const logout = useLogout();
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedPoster, setSelectedPoster] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
-
-
+  const [mapReady, setMapReady] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     if (jobs.length > 0) {
       console.log("Raw jobs data from API:", jobs);
     }
   }, [jobs]);
+
   // ---------------- Fetch jobs from backend ----------------
   const fetchJobs = async () => {
     try {
@@ -96,23 +84,46 @@ export default function SeekerDashboardPage() {
       fetchJobs();
     }
   }, [activePage]);
-  // ---------------- Map initialization for Home ----------------
-  // 🗺️ Show job markers on the map
-  useEffect(() => {
-    if (activePage !== "home" || jobs.length === 0) return;
 
-    (async () => {
+  // ---------------- Map initialization for Home ----------------
+  useEffect(() => {
+    if (activePage !== "home" || jobs.length === 0 || typeof window === 'undefined') return;
+
+    let map: any = null;
+    let isCleanedUp = false;
+
+    const initMap = async () => {
+      // ✅ Dynamic import of Leaflet
+      const L = (await import('leaflet')).default;
+      
+      // ✅ Import CSS using require (works better with Next.js)
+      if (typeof window !== 'undefined') {
+        require('leaflet/dist/leaflet.css');
+      }
+
+      if (isCleanedUp) return; // Don't initialize if component unmounted
+
+      // ✅ Fix default marker icons
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      
+      const icon2x = (await import('leaflet/dist/images/marker-icon-2x.png')).default;
+      const icon = (await import('leaflet/dist/images/marker-icon.png')).default;
+      const shadow = (await import('leaflet/dist/images/marker-shadow.png')).default;
+
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: icon2x.src,
+        iconUrl: icon.src,
+        shadowUrl: shadow.src,
+      });
 
       const mapContainer = document.getElementById("userMap");
-      if (!mapContainer) return;
+      if (!mapContainer || isCleanedUp) return;
 
       // ✅ Reuse map if it already exists
-      // @ts-ignore
-      let map = mapContainer._leaflet_map;
+      map = (mapContainer as any)._leaflet_map;
       if (!map) {
-        map = L.map(mapContainer).setView([-1.286389, 36.817223], 10); // Default Nairobi
-        // @ts-ignore
-        mapContainer._leaflet_map = map;
+        map = L.map(mapContainer).setView([-1.286389, 36.817223], 10);
+        (mapContainer as any)._leaflet_map = map;
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: "&copy; OpenStreetMap contributors",
@@ -127,7 +138,7 @@ export default function SeekerDashboardPage() {
       const markersLayer = L.layerGroup().addTo(map);
       (map as any)._jobMarkersLayer = markersLayer;
 
-      const allLatLngs: L.LatLngExpression[] = [];
+      const allLatLngs: [number, number][] = [];
 
       // ✅ Add job markers
       jobs.forEach(job => {
@@ -136,19 +147,22 @@ export default function SeekerDashboardPage() {
           console.log("Placing marker for:", job.title, job.geoLocation?.coordinates);
           const marker = L.marker([lat, lng]).addTo(markersLayer);
           marker.bindPopup(`
-          <strong>${job.title}</strong><br/>
-          ${job.location || "Unknown location"}<br/>
-          💰 ${job.salary || "—"}<br/>
-          🧍 ${job.poster?.name || "Unknown"}
-        `);
+            <strong>${job.title}</strong><br/>
+            ${job.location || "Unknown location"}<br/>
+            💰 ${job.salary || "—"}<br/>
+            🧍 ${job.poster?.name || "Unknown"}
+          `);
           allLatLngs.push([lat, lng]);
         }
       });
+
       console.log("Jobs loaded for map:", jobs.map(j => j.geoLocation?.coordinates));
+
       // ✅ Add user location if available
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
+            if (isCleanedUp) return;
             const { latitude, longitude } = pos.coords;
             const userMarker = L.marker([latitude, longitude], {
               title: "You are here",
@@ -156,7 +170,7 @@ export default function SeekerDashboardPage() {
             userMarker.bindPopup("<strong>Your Location</strong>");
             allLatLngs.push([latitude, longitude]);
 
-            // ✅ Center map to include all markers
+            // Center map
             if (allLatLngs.length > 0) {
               const group = L.featureGroup(allLatLngs.map(coords => L.marker(coords)));
               map.fitBounds(group.getBounds(), { padding: [50, 50] });
@@ -166,11 +180,12 @@ export default function SeekerDashboardPage() {
           },
           (err) => {
             console.warn("Could not get user location:", err);
+            if (isCleanedUp) return;
             if (allLatLngs.length > 0) {
               const group = L.featureGroup(allLatLngs.map(coords => L.marker(coords)));
               map.fitBounds(group.getBounds(), { padding: [50, 50] });
             } else {
-              map.setView([-1.286389, 36.817223], 10); // fallback to Nairobi
+              map.setView([-1.286389, 36.817223], 10);
             }
           }
         );
@@ -178,14 +193,31 @@ export default function SeekerDashboardPage() {
         const group = L.featureGroup(allLatLngs.map(coords => L.marker(coords)));
         map.fitBounds(group.getBounds(), { padding: [50, 50] });
       } else {
-        map.setView([-1.286389, 36.817223], 10); // fallback to Nairobi
+        map.setView([-1.286389, 36.817223], 10);
       }
-    })();
+
+      setMapReady(true);
+    };
+
+    initMap();
+
+    // Cleanup
+    return () => {
+      isCleanedUp = true;
+      if (map) {
+        map.remove();
+        const mapContainer = document.getElementById("userMap");
+        if (mapContainer) {
+          (mapContainer as any)._leaflet_map = null;
+        }
+      }
+    };
   }, [jobs, activePage]);
 
-
-  //----------------Fetch User to display on the profile page -----------//
+  // Fetch User to display on the profile page
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
       if (!token) return;
@@ -210,22 +242,18 @@ export default function SeekerDashboardPage() {
           avatar,
         });
 
-        setCurrentUser(data.user); // ✅ Save the logged-in seeker
+        setCurrentUser(data.user);
       } catch (err) {
         console.error("Error fetching user:", err);
       }
     };
 
     fetchUser();
-  }, []);
-
-
-
+  }, [API_URL]);
 
   // ---------------- Render pages ----------------
   const renderPage = () => {
     switch (activePage) {
-      // ---------------- PROFILE ----------------
       case "profile":
         return (
           <Card>
@@ -326,11 +354,8 @@ export default function SeekerDashboardPage() {
               )}
             </CardContent>
           </Card>
-
         );
 
-
-      // ---------------- APPLIED ----------------
       case "applied":
         return (
           <Card>
@@ -385,8 +410,6 @@ export default function SeekerDashboardPage() {
           </Card>
         );
 
-
-      // ---------------- SETTINGS (Updated with Change Password) ----------------
       case "settings":
         return (
           <Card>
@@ -448,7 +471,6 @@ export default function SeekerDashboardPage() {
           </Card>
         );
 
-      // ---------------- HOME / JOB LIST ----------------
       default:
         const filteredJobs = jobs.filter(job =>
           job.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -459,7 +481,6 @@ export default function SeekerDashboardPage() {
 
         return (
           <>
-            {/* 🗺️ Seeker Map */}
             <div
               id="userMap"
               style={{
@@ -470,7 +491,7 @@ export default function SeekerDashboardPage() {
                 marginBottom: '1.5rem',
                 border: '1px solid rgb(51,65,85)',
                 zIndex: 1,
-                backgroundColor: '#0f172a', // match your dark theme
+                backgroundColor: '#0f172a',
               }}
             />
 
@@ -586,7 +607,6 @@ export default function SeekerDashboardPage() {
     }
   };
 
-  // ---------------- MAIN RETURN ----------------
   return (
     <DashboardWrapper>
       <Sidebar>
@@ -613,13 +633,10 @@ export default function SeekerDashboardPage() {
             setChatOpen(false);
             setSelectedPoster(null);
           }}
-
           sender={currentUser._id}
           receiver={selectedPoster._id}
         />
       )}
-
-
     </DashboardWrapper>
   );
 }
