@@ -5,14 +5,14 @@ The platform focuses on **trust, safety, and accessibility** while enabling secu
 
 ---
 
-## 🌍 Our Vision
+## Our Vision
 - Empower local communities through micro-jobs  
 - Provide quick, reliable, and verified services  
 - Support individuals in finding work or helpers instantly  
 
 ---
 
-## 🧠 Tech Stack
+## Tech Stack
 - **Frontend:** React / Next.js, Tailwind CSS  
 - **Backend:** Node.js, Express  
 - **Database:** MongoDB  
@@ -22,7 +22,7 @@ The platform focuses on **trust, safety, and accessibility** while enabling secu
 
 ---
 
-## 🖼️ Screenshots
+## Screenshots
 
 - **Landing Page**  
 ![Screenshot (191)](https://github.com/user-attachments/assets/68fbdd00-76c1-4201-b29c-d1a286640219)
@@ -42,40 +42,40 @@ The platform focuses on **trust, safety, and accessibility** while enabling secu
 
 ---
 
-## 🗺️ Roadmap (Phase-wise)
+## Roadmap (Phase-wise)
 
-### Phase 1: Foundations ✅
+### Phase 1: Foundations 
 - Landing page setup  
 - Logo branding (Hajira logo)  
 - Authentication  
 - Database setup  
 
-### Phase 2: Core Features (⏳ In Progress)
+### Phase 2: Core Features ( In Progress)
 - User profiles  
 - Job posting & browsing  
 - Job application flow  
 
-### Phase 3: Enhancements (🔲 Pending)
+### Phase 3: Enhancements ( Pending)
 - Ratings & reviews  
 - Safety & reporting  
 - Admin dashboard  
 
-### Phase 4: Advanced Features (🔲 Pending)
+### Phase 4: Advanced Features ( Pending)
 - Locator system (map integration)  
 - Push notifications (optional)  
 - Payment integration (future)  
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 Pull requests are welcome! For major changes, please open an issue first to discuss what you’d like to change.
 
 ---
 
-## 📜 License
+##  License
 [MIT License](LICENSE)
 
 ---
 
-## 🧾 Changelog
+##  Changelog
 All notable changes are documented in the [CHANGELOG.md](./CHANGELOG.md).
