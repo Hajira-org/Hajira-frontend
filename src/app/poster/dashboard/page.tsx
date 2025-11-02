@@ -760,7 +760,7 @@ export default function PosterDashboardPage() {
                     onClick={() => toggleApplicants(job._id)}
                     style={{ backgroundColor: "#3b82f6", padding: "0.5rem 0.9rem" }}
                   >
-                    👥 {showApplicantsMap[job._id] ? "Hide Applicants" : "View Applicants"}
+                     {showApplicantsMap[job._id] ? "Hide Applicants" : "View Applicants"}
                   </Button>
                   <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "20px" }}>
                     <Button
@@ -779,7 +779,7 @@ export default function PosterDashboardPage() {
                         });
                       }}
                     >
-                      ✏️ Edit
+                       Edit job details
                     </Button>
 
                     <Button
@@ -787,7 +787,7 @@ export default function PosterDashboardPage() {
                       style={{ backgroundColor: "#ef4444", padding: "0.5rem 0.9rem" }}
                       onClick={() => handleDeleteJob(job._id)}
                     >
-                      🗑️ Delete
+                       Delete Job
                     </Button>
 
                   </div>
