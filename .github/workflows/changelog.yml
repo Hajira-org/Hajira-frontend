@@ -10,6 +10,9 @@ on:
 jobs:
   changelog:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # ✅ Give GitHub Actions permission to push
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
