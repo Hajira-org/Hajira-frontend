@@ -3,14 +3,11 @@
 Hajira is an African **community-driven micro-job platform** where people can post or claim small, hyperlocal jobs (e.g., deliveries, tutoring, translation, repairs).  
 The platform focuses on **trust, safety, and accessibility** while enabling secure, small-scale transactions. 
 
----
 
 ## Our Vision
 - Empower local communities through micro-jobs  
 - Provide quick, reliable, and verified services  
 - Support individuals in finding work or helpers instantly  
-
----
 
 ## Tech Stack
 - **Frontend:** React / Next.js, Tailwind CSS  
@@ -19,8 +16,6 @@ The platform focuses on **trust, safety, and accessibility** while enabling secu
 - **Authentication:** JWT / OAuth2 (Google login planned)  
 - **Hosting:** Netlify (frontend), Render / Vercel (backend)  
 - **Maps:** Leaflet.js / Google Maps API (locator system)  
-
----
 
 ## Screenshots
 
