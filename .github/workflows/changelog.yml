@@ -4,57 +4,34 @@ on:
   push:
     branches:
       - main
-  release:
-    types: [published]
+  workflow_dispatch:
 
 jobs:
   changelog:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # important for full commit history
 
       - name: Generate changelog
-        uses: ardalanamini/auto-changelog@v4.0.6
         id: changelog
-        env:
-          DEBUG: "auto-changelog*" # enable verbose logging for debugging
+        uses: ardalanamini/auto-changelog@v4.0.6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          output: CHANGELOG.md             # explicitly specify file output
-          generate-empty-changelog: true   # force file creation even if no changes
-          semver: false                    # avoid semver error on non-release pushes
-          commit-types: |
-            feat    : ✨ New Features
-            fix     : 🐛 Bug Fixes
-            build   : 🧱 Build System & Dependencies
-            perf    : ⚡ Performance Improvements
-            docs    : 📝 Documentation
-            test    : ✅ Tests
-            refactor: 🔄 Refactors
-            chore   : 🧹 Chores
-            ci      : 🤖 CI
-            style   : 🎨 Code Style
-            revert  : ⏪ Reverts
-          default-commit-type: Other Changes
-          mention-authors: true
-          include-commit-links: true
-          include-pr-links: true
           include-compare-link: true
-          use-github-autolink: true
+          include-pr-links: true
+          include-commit-links: true
+          mention-authors: true
+          mention-new-contributors: true
 
-      - name: List files after changelog generation
-        run: ls -la
+      - name: Save changelog to file
+        run: echo "${{ steps.changelog.outputs.changelog }}" > CHANGELOG.md
 
-      - name: Commit and push changelog
+      - name: Commit changelog
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md || echo "No changelog file found"
+          git add CHANGELOG.md
           git commit -m "docs: update changelog [skip ci]" || echo "No changes to commit"
           git push
