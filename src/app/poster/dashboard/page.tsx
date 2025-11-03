@@ -693,7 +693,7 @@ export default function PosterDashboardPage() {
                     fontSize: "1rem"
                   }}
                 >
-                  Post Job 🚀
+                  Post Job
                 </Button>
               </FormContainer>
             </CardContent>

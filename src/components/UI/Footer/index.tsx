@@ -44,7 +44,7 @@ const Footer = () => {
     <Wrapper id='CONTACTS'>
       <Inner>
         <FooterLogo>
-          <Image src={raft_footer_logo} alt="raft_footer_logo" height={250} width={300}/>
+          
         </FooterLogo>
         <FooterMainContent>
           <FooterMiddle>

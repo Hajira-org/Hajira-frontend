@@ -194,7 +194,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
         flexDirection: "column",
         zIndex: 9999,
         backdropFilter: "blur(20px)",
-        border: "1px solid rgba(255,255,255,0.8)",
+        border: "2px solid white",
       }}
     >
       {/* Animated Background Gradient */}
@@ -215,7 +215,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
       {/* Header */}
       <div
         style={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "#052034",
           color: "white",
           padding: "1.25rem 1.5rem",
           fontWeight: 600,
@@ -342,7 +342,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
                         width: "32px",
                         height: "32px",
                         borderRadius: "50%",
-                        background: "linear-gradient(135deg, #667eea, #764ba2)",
+                        background: "#052034",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -360,7 +360,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
                     whileHover={{ scale: 1.02 }}
                     style={{
                       background: isSender
-                        ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                        ? "#052034"
                         : "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
                       color: isSender ? "white" : "#1f2937",
                       padding: "0.85rem 1.1rem",
@@ -717,7 +717,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
             background: "#f9fafb",
             borderRadius: "24px",
             padding: "0.5rem",
-            border: "1px solid #e5e7eb",
+            border: "1px solid #052034",
             boxShadow: "inset 0 2px 4px rgba(0,0,0,0.04)",
           }}
         >
@@ -729,7 +729,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
               padding: "0.75rem 1rem",
               outline: "none",
               fontSize: "0.95rem",
-              color: "#1f2937",
+              color: "#052034",
             }}
             value={activeTab === "chat" ? message : aiMessage}
             onChange={(e) => activeTab === "chat" ? setMessage(e.target.value) : setAiMessage(e.target.value)}

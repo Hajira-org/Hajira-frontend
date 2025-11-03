@@ -251,7 +251,7 @@ export const DashboardWrapper = styled.div`
   display: flex;
   min-height: 100vh;
   gap: 1rem;
-  background: #0f172a;
+  background: #052034;
   color: #fff;
 
   @media (max-width: 1024px) {
@@ -264,7 +264,7 @@ export const Sidebar = styled.div`
   width: 240px;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
-  border-radius: 12px;
+  border-bottom-right-radius: 20px;
   padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
