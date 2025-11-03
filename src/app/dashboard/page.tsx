@@ -16,6 +16,7 @@ import {
   Input
 } from '@/app/common/styledComponents';
 import { useLogout } from '@/utils/logout';
+import toast from 'react-hot-toast';
 
 // ✅ Disable static generation for this page
 export const dynamic = 'force-dynamic';
@@ -56,6 +57,10 @@ export default function SeekerDashboardPage() {
   const [selectedPoster, setSelectedPoster] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [chats, setChats] = useState<any[]>([]);
+
+  const [activeChat, setActiveChat] = useState<string | null>(null);
+
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -64,6 +69,25 @@ export default function SeekerDashboardPage() {
       console.log("Raw jobs data from API:", jobs);
     }
   }, [jobs]);
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_URL}/api/chats/${currentUser._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setChats(Array.isArray(data.chats) ? data.chats : []);
+      } catch (err) {
+        console.error("Failed to fetch chats:", err);
+        setChats([]);
+      }
+    };
+
+    if (activePage === "chats" && currentUser?._id) {
+      fetchChats();
+    }
+  }, [activePage, currentUser]);
 
   // ---------------- Fetch jobs from backend ----------------
   const fetchJobs = async () => {
@@ -95,7 +119,7 @@ export default function SeekerDashboardPage() {
     const initMap = async () => {
       // ✅ Dynamic import of Leaflet
       const L = (await import('leaflet')).default;
-      
+
       // ✅ Import CSS using require (works better with Next.js)
       if (typeof window !== 'undefined') {
         require('leaflet/dist/leaflet.css');
@@ -105,7 +129,7 @@ export default function SeekerDashboardPage() {
 
       // ✅ Fix default marker icons
       delete (L.Icon.Default.prototype as any)._getIconUrl;
-      
+
       const icon2x = (await import('leaflet/dist/images/marker-icon-2x.png')).default;
       const icon = (await import('leaflet/dist/images/marker-icon.png')).default;
       const shadow = (await import('leaflet/dist/images/marker-shadow.png')).default;
@@ -313,7 +337,7 @@ export default function SeekerDashboardPage() {
                           seeker: { skills: profile.skills.split(",").map((s) => s.trim()) },
                         }),
                       });
-                      alert("Profile updated ✅");
+                      toast.success("Profile updated");
                     }}
                   >
                     <InputGroup>
@@ -410,6 +434,87 @@ export default function SeekerDashboardPage() {
           </Card>
         );
 
+      case "chats":
+        return (
+          <Card>
+            <CardTitle>Chats </CardTitle>
+            <CardContent>
+              {chats.length === 0 ? (
+                <p style={{ color: "#94a3b8" }}>No chats yet.</p>
+              ) : (
+                chats.map((chat: any) => (
+                  <div
+                    key={chat.applicantId}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "0.5rem",
+                      borderBottom: "1px solid #334155",
+                      cursor: "pointer",
+                      backgroundColor:
+                        activeChat === chat.applicantId ? "#1e293b" : "transparent",
+                    }}
+                    onClick={() => {
+                      setSelectedPoster({
+                        _id: chat.applicantId,
+                        name: chat.name,
+                        email: chat.email,
+                        avatar: chat.avatar,
+                      });
+                      setChatOpen(true);
+                      setActiveChat(chat.applicantId);
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      {chat.avatar ? (
+                        <img
+                          src={chat.avatar}
+                          alt={chat.name}
+                          style={{ width: 40, height: 40, borderRadius: "50%" }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            background: "#64748b",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#fff",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {chat.name?.[0] || "?"}
+                        </div>
+                      )}
+                      <div>
+                        <p style={{ margin: 0, fontWeight: 600 }}>{chat.name}</p>
+                        <p style={{ margin: 0, fontSize: "0.85rem", color: "#94a3b8" }}>
+                          {chat.lastMessage || "No messages yet"}
+                        </p>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                      {chat.lastMessageTime
+                        ? new Date(chat.lastMessageTime).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                        : ""}
+                    </span>
+                  </div>
+                ))
+              )}
+
+            </CardContent>
+          </Card>
+        );
+
+
+
       case "settings":
         return (
           <Card>
@@ -434,10 +539,10 @@ export default function SeekerDashboardPage() {
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.message || "Error changing password");
 
-                    alert("Password changed successfully ✅");
+                    toast.success("Password changed successfully ✅");
                     setPasswords({ currentPassword: "", newPassword: "" });
                   } catch (err: any) {
-                    alert(err.message || "Failed to change password ❌");
+                    toast.error(err.message || "Failed to change password ❌");
                   }
                 }}
               >
@@ -590,14 +695,14 @@ export default function SeekerDashboardPage() {
                         });
                         if (!res.ok) throw new Error("Failed to apply");
                         setJobs(jobs.map(j => j._id === job._id ? { ...j, applied: true } : j));
-                        alert("Applied successfully!");
+                        toast.success("Applied successfully!");
                       } catch (err) {
                         console.error(err);
-                        alert("Failed to apply. Try again.");
+                        toast.error("Failed to apply. Try again.");
                       }
                     }}
                   >
-                    {job.applied ? "✔️ Applied" : "Apply Now"}
+                    {job.applied ? " Applied" : "Apply Now"}
                   </Button>
                 </CardActions>
               </Card>
@@ -614,6 +719,13 @@ export default function SeekerDashboardPage() {
         <SidebarLink as="button" $active={activePage === "profile"} onClick={() => setActivePage("profile")}>Profile</SidebarLink>
         <SidebarLink as="button" $active={activePage === "applied"} onClick={() => setActivePage("applied")}>Applied Jobs</SidebarLink>
         <SidebarLink as="button" $active={activePage === "settings"} onClick={() => setActivePage("settings")}>Settings</SidebarLink>
+        <SidebarLink
+          as="button"
+          $active={activePage === "chats"}
+          onClick={() => setActivePage("chats")}
+        >
+          Chats
+        </SidebarLink>
 
         <Button
           type="button"

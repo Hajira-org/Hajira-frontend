@@ -22,6 +22,7 @@ import toast from "react-hot-toast";
 
 
 
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function PosterDashboardPage() {
@@ -35,6 +36,37 @@ export default function PosterDashboardPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [chats, setChats] = useState<
+    {
+      applicantId: string;
+      name: string;
+      email: string;
+      avatar?: string | null;
+      lastMessage: string;
+      lastMessageTime: string;
+    }[]
+  >([]);
+  const [activeChat, setActiveChat] = useState<string | null>(null); // selected chat room
+  const fetchChats = async () => {
+    if (!currentUser?._id) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/chats/${currentUser._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setChats(data.chats || []);
+    } catch (err) {
+      console.error("Error fetching chats:", err);
+      toast.error("Failed to load chats.");
+    }
+  };
+  useEffect(() => {
+    if (activePage === "chats") {
+      fetchChats();
+    }
+  }, [activePage, currentUser]);
 
 
 
@@ -66,6 +98,23 @@ export default function PosterDashboardPage() {
   // Add these state variables near the top:
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [detectingLocation, setDetectingLocation] = useState(false);
+  const [acceptedJobs, setAcceptedJobs] = useState([]);
+
+  const fetchAcceptedJobs = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/jobs/accepted`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAcceptedJobs(data.jobs || []);
+      }
+    } catch (err) {
+      console.error("Error fetching accepted jobs:", err);
+    }
+  };
+
 
   // Automatically get current location
   useEffect(() => {
@@ -235,6 +284,7 @@ export default function PosterDashboardPage() {
   useEffect(() => {
     if (activePage === "home" || activePage === "myJobs") {
       fetchJobs();
+      fetchAcceptedJobs()
       const interval = setInterval(fetchJobs, 5000);
       return () => clearInterval(interval);
     }
@@ -301,7 +351,7 @@ export default function PosterDashboardPage() {
       return data.url || null;
     } catch (err) {
       console.error("File upload error:", err);
-      alert("❌ File upload failed.");
+      toast.error("❌ File upload failed.");
       return null;
     }
   };
@@ -320,14 +370,14 @@ export default function PosterDashboardPage() {
 
       if (res.ok) {
         setJobs(prev => prev.filter(job => job._id !== jobId));
-        alert("🗑️ Job deleted successfully.");
+        toast.success("Job deleted successfully.");
       } else {
         const data = await res.json();
-        alert(data.message || "❌ Failed to delete job.");
+        toast.error(data.message || "❌ Failed to delete job.");
       }
     } catch (err) {
       console.error("Error deleting job:", err);
-      alert("❌ Error deleting job.");
+      toast.error("❌ Error deleting job.");
     }
   };
 
@@ -391,7 +441,7 @@ export default function PosterDashboardPage() {
                       style={{ marginTop: "0.5rem", backgroundColor: "#3b82f6" }}
                       onClick={async () => {
                         if (!logoFile) {
-                          alert("Please select an image first.");
+                          toast.error("Please select an image first.");
                           return;
                         }
                         const url = await uploadFile(logoFile);
@@ -406,11 +456,11 @@ export default function PosterDashboardPage() {
                             body: JSON.stringify({ avatar: url }),
                           });
                           if (res.ok) {
-                            alert("✅ Profile picture updated!");
+                            toast.success("Profile picture updated!");
                             setProfile((prev) => ({ ...prev, avatar: url }));
                             setLogoFile(null);
                           } else {
-                            alert("❌ Failed to update avatar.");
+                            toast.error("❌ Failed to update avatar.");
                           }
                         }
                       }}
@@ -444,7 +494,7 @@ export default function PosterDashboardPage() {
                       }),
 
                     });
-                    alert("Profile updated ✅");
+                    toast.success("Profile updated");
                   }}
                 >
                   <InputGroup>
@@ -534,7 +584,7 @@ export default function PosterDashboardPage() {
                   const data = await res.json();
 
                   if (res.ok) {
-                    alert("✅ Job posted!");
+                    toast.success("✅ Job posted!");
                     setForm({
                       title: "",
                       description: "",
@@ -547,7 +597,7 @@ export default function PosterDashboardPage() {
                     setJobImageFile(null);
                     setActivePage("myJobs");
                   } else {
-                    alert(data.message || "❌ Failed to post job.");
+                    toast.error(data.message || "❌ Failed to post job.");
                   }
                 }}
               >
@@ -712,7 +762,7 @@ export default function PosterDashboardPage() {
 
             {/* No jobs found */}
             {filteredJobs.length === 0 && (
-              <p style={{ color: '#94a3b8', textAlign: 'center' }}>No jobs found.</p>
+              <p style={{ color: '#94a3b8', textAlign: 'center' }}>No jobs found. Create One on the jobs tab. </p>
             )}
 
             {/* Job cards */}
@@ -760,7 +810,7 @@ export default function PosterDashboardPage() {
                     onClick={() => toggleApplicants(job._id)}
                     style={{ backgroundColor: "#3b82f6", padding: "0.5rem 0.9rem" }}
                   >
-                     {showApplicantsMap[job._id] ? "Hide Applicants" : "View Applicants"}
+                    {showApplicantsMap[job._id] ? "Hide Applicants" : "View Applicants"}
                   </Button>
                   <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "20px" }}>
                     <Button
@@ -779,7 +829,7 @@ export default function PosterDashboardPage() {
                         });
                       }}
                     >
-                       Edit job details
+                      Edit job details
                     </Button>
 
                     <Button
@@ -787,7 +837,7 @@ export default function PosterDashboardPage() {
                       style={{ backgroundColor: "#ef4444", padding: "0.5rem 0.9rem" }}
                       onClick={() => handleDeleteJob(job._id)}
                     >
-                       Delete Job
+                      Delete Job
                     </Button>
 
                   </div>
@@ -825,11 +875,11 @@ export default function PosterDashboardPage() {
 
                         const data = await res.json();
                         if (res.ok) {
-                          alert("✅ Job updated successfully!");
+                          toast.success("Job updated successfully!");
                           setEditingJob(null);
                           fetchJobs();
                         } else {
-                          alert(`❌ ${data.message || "Failed to update job."}`);
+                          toast.error(`❌ ${data.message || "Failed to update job."}`);
                         }
                       }}
                     >
@@ -937,16 +987,60 @@ export default function PosterDashboardPage() {
                             <p>🕒 Applied At: {new Date(app.appliedAt).toLocaleString()}</p>
                           </div>
 
-                          <Button
-                            type="button"
-                            style={{ backgroundColor: "#3b82f6", padding: "0.4rem 0.8rem" }}
-                            onClick={() => {
-                              setSelectedApplicant(app.applicant);
-                              setChatOpen(true);
-                            }}
-                          >
-                            💬 Chat
-                          </Button>
+                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <Button
+                              type="button"
+                              style={{ backgroundColor: "#3b82f6", padding: "0.4rem 0.8rem" }}
+                              onClick={() => {
+                                setSelectedApplicant(app.applicant);
+                                setChatOpen(true);
+                              }}
+                            >
+                              💬 Chat
+                            </Button>
+
+                            <Button
+                              type="button"
+                              style={{ backgroundColor: "#22c55e", padding: "0.4rem 0.8rem" }}
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem("token");
+                                  const res = await fetch(`${API_URL}/api/jobs/${job._id}/accept`, {
+                                    method: "PUT",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                    body: JSON.stringify({ applicantId: app.applicant._id }),
+                                  });
+
+                                  const data = await res.json();
+
+                                  if (res.ok) {
+                                    toast.success("✅ Applicant accepted!");
+
+                                    // 🧹 Remove this job from 'My Jobs' (open jobs)
+                                    setJobs((prev) => prev.filter((j) => j._id !== job._id));
+
+                                    // 🔄 Refresh accepted jobs tab if you have one
+                                    if (typeof fetchAcceptedJobs === "function") {
+                                      await fetchAcceptedJobs();
+                                    }
+                                  } else {
+                                    toast.error(data.message || "Failed to accept applicant.");
+                                  }
+                                } catch (err) {
+                                  console.error("Error accepting applicant:", err);
+                                  toast.error("Something went wrong.");
+                                }
+                              }}
+                            >
+                              ✅ Accept
+                            </Button>
+
+
+                          </div>
+
                         </div>
                       ))
                     ) : (
@@ -960,6 +1054,50 @@ export default function PosterDashboardPage() {
           </>
         );
       }
+      case "accepted":
+
+
+
+        return (
+          <>
+            <CardTitle>Accepted Applicants</CardTitle>
+            {acceptedJobs.length === 0 ? (
+              <p style={{ color: "#94a3b8" }}>No accepted jobs yet.</p>
+            ) : (
+              acceptedJobs.map((job: {
+                _id: string;
+                title: string;
+                description: string;
+                location: string;
+                salary?: string;
+                acceptedApplicant?: { name?: string; email?: string };
+              }) => (
+                <Card
+                  key={job._id}
+                  style={{
+                    backgroundColor: "#1e293b",
+                    color: "#f1f5f9",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  <CardTitle>{job.title}</CardTitle>
+                  <CardContent>
+                    <p>{job.description}</p>
+                    <p>📍 {job.location}</p>
+                    {job.salary && <p>💰 {job.salary}</p>}
+                    {job.acceptedApplicant && (
+                      <p style={{ marginTop: "0.5rem", color: "#22c55e" }}>
+                        👤 Accepted Applicant:{" "}
+                        {job.acceptedApplicant.name || job.acceptedApplicant.email || "—"}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </>
+        );
+
       // ---------------- SETTINGS ----------------        
       case "settings":
         return (
@@ -983,11 +1121,11 @@ export default function PosterDashboardPage() {
                   });
                   const data = await res.json();
                   if (res.ok) {
-                    alert("✅ Password updated successfully!");
+                    toast.success("Password Updated Succesfully");
                     setCurrentPassword("");
                     setNewPassword("");
                   } else {
-                    alert(`❌ ${data.message || "Failed to change password"}`);
+                    toast.error(`❌ ${data.message || "Failed to change password"}`);
                   }
                 }}
               >
@@ -1014,6 +1152,78 @@ export default function PosterDashboardPage() {
             </CardContent>
           </Card>
         );
+      case "chats":
+        return (
+          <Card>
+            <CardTitle>Chats with applicants.</CardTitle>
+            <CardContent>
+              {chats.length === 0 ? (
+                <p style={{ color: "#94a3b8" }}>No chats yet.</p>
+              ) : (
+                chats.map((chat) => (
+                  <div
+                    key={chat.applicantId}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "0.5rem",
+                      borderBottom: "1px solid #334155",
+                      cursor: "pointer",
+                      backgroundColor:
+                        activeChat === chat.applicantId ? "#1e293b" : "transparent",
+                    }}
+                    onClick={() => {
+                      setSelectedApplicant({
+                        _id: chat.applicantId,
+                        name: chat.name,
+                        email: chat.email,
+                        avatar: chat.avatar,
+                      });
+                      setChatOpen(true);
+                      setActiveChat(chat.applicantId);
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      {chat.avatar ? (
+                        <img
+                          src={chat.avatar}
+                          alt={chat.name}
+                          style={{ width: 40, height: 40, borderRadius: "50%" }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            background: "#64748b",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#fff",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {chat.name?.[0] || "?"}
+                        </div>
+                      )}
+                      <div>
+                        <p style={{ margin: 0, fontWeight: 600 }}>{chat.name}</p>
+                        <p style={{ margin: 0, fontSize: "0.85rem", color: "#94a3b8" }}>
+                          {chat.lastMessage}
+                        </p>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                      {new Date(chat.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        );
 
 
       default:
@@ -1037,6 +1247,15 @@ export default function PosterDashboardPage() {
         <SidebarLink as="button" $active={activePage === "createJob"} onClick={() => setActivePage("createJob")}>Create Job</SidebarLink>
         <SidebarLink as="button" $active={activePage === "myJobs"} onClick={() => setActivePage("myJobs")}>My Jobs</SidebarLink>
         <SidebarLink as="button" $active={activePage === "settings"} onClick={() => setActivePage("settings")}>Settings</SidebarLink>
+        <SidebarLink as="button" $active={activePage === "accepted"} onClick={() => setActivePage("accepted")}>Accepted Applicants</SidebarLink>
+        <SidebarLink
+          as="button"
+          $active={activePage === "chats"}
+          onClick={() => setActivePage("chats")}
+        >
+          Chats
+        </SidebarLink>
+
         <Button type="button" onClick={logout} style={{ marginTop: "auto", background: "#ef4444" }}>Logout</Button>
       </Sidebar>
 
@@ -1048,7 +1267,7 @@ export default function PosterDashboardPage() {
             setChatOpen(false);
             setSelectedApplicant(null);
           }}
-          
+
           sender={currentUser._id}
           receiver={selectedApplicant._id}
         />
