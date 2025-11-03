@@ -11,22 +11,38 @@ jobs:
   changelog:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  
+      contents: write
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - name: Install auto-changelog
-        run: npm install -g auto-changelog
+          fetch-depth: 0  # important for full commit history
 
       - name: Generate changelog
-        run: auto-changelog -p
+        uses: ardalanamini/auto-changelog@v4.0.6
+        id: changelog
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          semver: false # ✅ avoids “Expected semver” error on branch pushes
+          commit-types: |
+            feat    : ✨ New Features
+            fix     : 🐛 Bug Fixes
+            build   : 🧱 Build System & Dependencies
+            perf    : ⚡ Performance Improvements
+            docs    : 📝 Documentation
+            test    : ✅ Tests
+            refactor: 🔄 Refactors
+            chore   : 🧹 Chores
+            ci      : 🤖 CI
+            style   : 🎨 Code Style
+            revert  : ⏪ Reverts
+          default-commit-type: Other Changes
+          mention-authors: true
+          include-commit-links: true
+          include-pr-links: true
+          include-compare-link: true
+          use-github-autolink: true
 
       - name: Commit and push changelog
         run: |
