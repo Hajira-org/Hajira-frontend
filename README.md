@@ -3,6 +3,7 @@
 Hajira is an African **community-driven micro-job platform** where people can post or claim small, hyperlocal jobs (e.g., deliveries, tutoring, translation, repairs).  
 The platform focuses on **trust, safety, and accessibility** while enabling secure, small-scale transactions. 
 
+For the live site visit //http://hajira-org.vercel.app/ if the link isnt working, it may be due to downtimes visit http://hajira-org.netlify.app/ 
 
 ## Our Vision
 - Empower local communities through micro-jobs  
