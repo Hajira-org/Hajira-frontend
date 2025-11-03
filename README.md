@@ -50,20 +50,18 @@ The platform focuses on **trust, safety, and accessibility** while enabling secu
 - Authentication  
 - Database setup  
 
-### Phase 2: Core Features ( In Progress)
+### Phase 2: Core Features (Completed )
 - User profiles  
 - Job posting & browsing  
-- Job application flow  
+- Job application flow
+- Locator system (map integration) 
 
-### Phase 3: Enhancements ( Pending)
+### Phase 3: Enhancements ( Working on)
 - Ratings & reviews  
 - Safety & reporting  
-- Admin dashboard  
-
-### Phase 4: Advanced Features ( Pending)
-- Locator system (map integration)  
+- Admin dashboard (To manage users, violations, account retrievals and customer service)
 - Push notifications (optional)  
-- Payment integration (future)  
+- Payment integration (future) we have decided to stick with manual payments due to mpesa api outages but will resume when they come back up
 
 ---
 
