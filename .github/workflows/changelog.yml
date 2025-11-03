@@ -9,16 +9,21 @@ on:
 jobs:
   changelog:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Ensure full commit history
 
       - name: Generate changelog
         id: changelog
         uses: ardalanamini/auto-changelog@v4.0.6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          semver: false # ✅ Prevents "Expected semver" error
           include-compare-link: true
           include-pr-links: true
           include-commit-links: true
