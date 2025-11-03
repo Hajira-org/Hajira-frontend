@@ -24,6 +24,7 @@ jobs:
         id: changelog
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          output: CHANGELOG.md
           semver: false # ✅ avoids “Expected semver” error on branch pushes
           commit-types: |
             feat    : ✨ New Features
