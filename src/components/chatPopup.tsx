@@ -39,12 +39,12 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-  
+
     import("socket.io-client").then(({ io }) => {
       const s: Socket = io(process.env.NEXT_PUBLIC_API_BACKEND_URL as string);
       setSocket(s);
     });
-  
+
     return () => {
       if (socket) socket.disconnect();
     };
@@ -84,15 +84,26 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
     const timeout = setTimeout(async () => {
       try {
         setLoadingSuggestion(true);
+        console.log("🧠 Suggestion request:", { text: message, history: messages.slice(-5) });
+
         const res = await fetch("/api/suggest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: message, history: messages.slice(-5) }),
           signal: controller.signal,
         });
+
         const data = await res.json();
-        setSuggestion(data.suggestion || "");
-      } catch {
+        console.log("🤖 Suggestion API full response:", data);
+
+        if (!res.ok) {
+          console.warn("⚠️ Suggestion request failed with status", res.status);
+        }
+
+        // Optionally show raw suggestion in UI for debugging
+        setSuggestion(data.suggestion || data.response || "");
+      } catch (err) {
+        console.error("❌ Suggestion fetch error:", err);
         setSuggestion("");
       } finally {
         setLoadingSuggestion(false);
@@ -104,6 +115,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
       controller.abort();
     };
   }, [message]);
+
 
   const sendMessage = () => {
     if (!message.trim() || !socket) return;
@@ -130,35 +142,46 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
   };
 
   const sendAiMessage = async () => {
-    if (!aiMessage.trim()) return;
-    
+    const messageToSend = aiMessage.trim();
+    if (!messageToSend) return;
+
     const userMsg = {
       role: "user" as const,
-      message: aiMessage,
+      message: messageToSend,
       time: new Date().toISOString(),
     };
-    
+
+    const updatedHistory = [...aiMessages, userMsg].slice(-10);
+
     setAiMessages((prev) => [...prev, userMsg]);
     setAiMessage("");
     setLoadingAi(true);
-    
+
     try {
+
+      console.log("🧠 Sending AI message:", {
+        message: messageToSend,
+        history: updatedHistory,
+      });
+      const token = localStorage.getItem("token");
       const res = await fetch("/api/ai-chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          message: aiMessage, 
-          history: aiMessages.slice(-10) 
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
+
+        body: JSON.stringify({
+          message: messageToSend,
+          history: updatedHistory,
         }),
       });
+
       const data = await res.json();
-      
+
       const aiMsg = {
         role: "ai" as const,
         message: data.response || "Sorry, I couldn't process that.",
         time: new Date().toISOString(),
       };
-      
+
       setAiMessages((prev) => [...prev, aiMsg]);
     } catch (error) {
       const errorMsg = {
@@ -171,6 +194,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
       setLoadingAi(false);
     }
   };
+
 
   if (!open) return null;
 
@@ -240,7 +264,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
           />
           <div>
             <div style={{ fontSize: "1rem", fontWeight: 600 }}>
-              {activeTab === "chat" ? "User Chat" : "AI Assistant"}
+              {activeTab === "chat" ? "User Chat" : "Hajira AI"}
             </div>
             <div
               style={{
@@ -436,9 +460,19 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
                   gap: "1rem",
                 }}
               >
-                <div style={{ fontSize: "3rem" }}>🤖</div>
+                <img
+                  src="/images/logo4.png"
+                  alt="AI Assistant"
+                  style={{
+                    width: "80px",
+                    height: "80px",
+                    borderRadius: "50%",
+                    boxShadow: "0 4px 20px rgba(245, 158, 11, 0.3)",
+                    objectFit: "cover",
+                  }}
+                />
                 <div style={{ color: "#6b7280", fontSize: "0.95rem", maxWidth: "80%" }}>
-                  Start a conversation with AI Assistant. Ask anything!
+                  Start a conversation with Hajira AI. Ask anything!
                 </div>
               </motion.div>
             ) : (
@@ -751,7 +785,7 @@ const ChatPopup: FC<ChatPopupProps> = ({ open, onClose, sender, receiver }) => {
             disabled={activeTab === "chat" ? !message.trim() : !aiMessage.trim()}
             style={{
               background: (activeTab === "chat" ? message.trim() : aiMessage.trim())
-                ? activeTab === "chat" 
+                ? activeTab === "chat"
                   ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
                   : "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
                 : "#e5e7eb",
