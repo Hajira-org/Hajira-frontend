@@ -1,3 +1,4 @@
+[![Auto Changelog](https://github.com/Hajira-org/Hajira-frontend/actions/workflows/changelog.yml/badge.svg)](https://github.com/Hajira-org/Hajira-frontend/actions/workflows/changelog.yml)
 #  Hajira — A local Micro-Job Platform
 
 Hajira is an African **community-driven micro-job platform** where people can post or claim small, hyperlocal jobs (e.g., deliveries, tutoring, translation, repairs).  
