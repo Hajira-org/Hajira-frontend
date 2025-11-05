@@ -20,21 +20,20 @@ For the live site visit //http://hajira-org.vercel.app/ if the link isnt working
 
 ## Screenshots
 
-- **Landing Page**  
-![Screenshot (191)](https://github.com/user-attachments/assets/68fbdd00-76c1-4201-b29c-d1a286640219)
+![Screenshot (256)](https://github.com/user-attachments/assets/b6675743-00df-4c3d-972e-e2f867053ec5)
 
-- **Authentication (Sign In / Sign Up)**  
-![Screenshot (201)](https://github.com/user-attachments/assets/2c013aed-2fcb-4d6a-a5ba-20abd7f001dd)
+---
+![Screenshot (255)](https://github.com/user-attachments/assets/e0082c84-d160-4066-b154-64584ca68e1d)
 
-- **Job Posting**  
-![Screenshot (202)](https://github.com/user-attachments/assets/bef134c9-8059-46d9-a042-324bec089bea)
-![Screenshot (203)](https://github.com/user-attachments/assets/99946e10-9c5b-429c-bd13-22fad256b9f4)
 
-- **Job Seekers Dashboard**  
-![Screenshot (205)](https://github.com/user-attachments/assets/dc73527c-68c9-4606-906d-d6bea93d29c2)
+---
+![Screenshot (260)](https://github.com/user-attachments/assets/359655f6-b846-46aa-be8d-cc3e5d85f987)
 
-- **Job Posters Dashboard**  
-![Screenshot (206)](https://github.com/user-attachments/assets/ee192140-84e0-48f4-ab42-3a865cd29170)
+---
+![Screenshot (238)](https://github.com/user-attachments/assets/3005321d-4e5b-413a-8938-6c6784c18bb1)
+
+---
+![Screenshot (258)](https://github.com/user-attachments/assets/9a776a40-9198-4b6e-85fb-4144ada3cbb8)
 
 ---
 
