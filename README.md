@@ -20,6 +20,12 @@ For the live site visit //http://hajira-org.vercel.app/ if the link isnt working
 
 ## Screenshots
 
+Landing Page
+
+![Screenshot (238) (1)](https://github.com/user-attachments/assets/63f1c94c-addd-4491-bd88-4e11d01aa411)
+
+---
+
 ![Screenshot (256)](https://github.com/user-attachments/assets/b6675743-00df-4c3d-972e-e2f867053ec5)
 
 ---
