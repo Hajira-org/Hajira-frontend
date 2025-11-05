@@ -30,7 +30,7 @@
 * update fetch URL to use localhost for API authentication in signin page (c2837f0bd67d01b82bbc024abad3d119e843d082 by @Brianali-codes)
 
 ## Documentation
-* update changelog (513c2fd6fd486bf1ca18f0a3de557d83abad0cfb & 9ee9fe748c2df93ff570dc8288c8232b84392a0b & 5e16eff79b99cdb739f26b3ad642b32eb93fc3a5 & 54080298ccb31c88a00e439db8c508d638dc2e6f & ed53bdbdf55ba5b356c05a0a500130fa90c84c8d & f5cf5259b194cc28f33b19d72cb70e419b2079af & 59813fbde39b1b71c382245723fddd06ba31c3a7 & 6daa811b97a0ad574c89ebacd6cf82b7b57454bd & b484b750bb67f365507be8426b46adf8c61f9fea & c849079c91cf91512095c7096b1695e96d3c6ba0 by @github-actions[bot])
+* update changelog (24eedc87009344470087d9fa484aef61373483e6 & 513c2fd6fd486bf1ca18f0a3de557d83abad0cfb & 9ee9fe748c2df93ff570dc8288c8232b84392a0b & 5e16eff79b99cdb739f26b3ad642b32eb93fc3a5 & 54080298ccb31c88a00e439db8c508d638dc2e6f & ed53bdbdf55ba5b356c05a0a500130fa90c84c8d & f5cf5259b194cc28f33b19d72cb70e419b2079af & 59813fbde39b1b71c382245723fddd06ba31c3a7 & 6daa811b97a0ad574c89ebacd6cf82b7b57454bd & b484b750bb67f365507be8426b46adf8c61f9fea & c849079c91cf91512095c7096b1695e96d3c6ba0 by @github-actions[bot])
 
 ## Refactors
 * update profile form with styled components and improve UI (2002a0e2b969832e86bb3467755061837f92b6d3 by @Brianali-codes)
