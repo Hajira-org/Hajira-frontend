@@ -14,9 +14,10 @@ For the live site visit //http://hajira-org.vercel.app/ if the link isnt working
 - **Frontend:** React / Next.js, Tailwind CSS  
 - **Backend:** Node.js, Express  
 - **Database:** MongoDB  
-- **Authentication:** JWT / OAuth2 (Google login planned)  
-- **Hosting:** Netlify (frontend), Render / Vercel (backend)  
-- **Maps:** Leaflet.js / Google Maps API (locator system)  
+- **Authentication:** JWT / (Google login planned)
+- **Real Time Communication**: Socket.io 
+- **Hosting:** Netlify and vercel.
+- **Maps:** Leaflet.js (locator system )( Google Maps API Planned for when scaling the application)  
 
 ## Screenshots
 
@@ -51,38 +52,12 @@ Hajira AI developed by prompting groq AI to follow the given parameters, tweaked
 
 ---
 
-## Roadmap (Phase-wise)
-
-### Phase 1: Foundations 
-- Landing page setup  
-- Logo branding (Hajira logo)  
-- Authentication  
-- Database setup  
-
-### Phase 2: Core Features (Completed )
-- User profiles  
-- Job posting & browsing  
-- Job application flow
-- Locator system (map integration) 
-
-### Phase 3: Enhancements ( Working on)
-- Ratings & reviews  
-- Safety & reporting  
-- Admin dashboard (To manage users, violations, account retrievals and customer service)
-- Push notifications (optional)  
-- Payment integration (future) we have decided to stick with manual payments due to mpesa api outages but will resume when they come back up
-
----
-
 ##  Contributing
 Pull requests are welcome! For major changes, please open an issue first to discuss what you’d like to change.
 
----
 
 ##  License
 [MIT License](LICENSE)
-
----
 
 ##  Changelog
 All notable changes are documented in the [CHANGELOG.md](./CHANGELOG.md).
