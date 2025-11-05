@@ -20,25 +20,33 @@ For the live site visit //http://hajira-org.vercel.app/ if the link isnt working
 
 ## Screenshots
 
-Landing Page
+Hajira's Landing Page.
 
 ![Screenshot (238) (1)](https://github.com/user-attachments/assets/63f1c94c-addd-4491-bd88-4e11d01aa411)
 
 ---
 
+Sign in page.
+
 ![Screenshot (256)](https://github.com/user-attachments/assets/b6675743-00df-4c3d-972e-e2f867053ec5)
 
 ---
+
+Job posters dashboard showing "My jobs"
+
 ![Screenshot (255)](https://github.com/user-attachments/assets/e0082c84-d160-4066-b154-64584ca68e1d)
 
 
 ---
+Job Seeker's Dashboard Showing All available Jobs in a map view. (The map view may be inacurate due to usage of openmaps api, google maps API couldnt be used untill the application is scaled further and enough funds for the API are raised).
+
 ![Screenshot (260)](https://github.com/user-attachments/assets/359655f6-b846-46aa-be8d-cc3e5d85f987)
 
----
-![Screenshot (238)](https://github.com/user-attachments/assets/3005321d-4e5b-413a-8938-6c6784c18bb1)
 
 ---
+
+Hajira AI developed by prompting groq AI to follow the given parameters, tweaked to also fetch job data from the database which is isolated from the users therefore ensuring privacy, for more details on the backend structure follow this !link[https://www.github.com/hajira-org/hajira-backend]
+
 ![Screenshot (258)](https://github.com/user-attachments/assets/9a776a40-9198-4b6e-85fb-4144ada3cbb8)
 
 ---
