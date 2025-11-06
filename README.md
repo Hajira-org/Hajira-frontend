@@ -1,7 +1,7 @@
 ![Vercel Deploy](https://deploy-badge.vercel.app/vercel/hajira-org?name=Hajira.org%2Fvercel)
 ![Netlify Deploy](http://img.shields.io/netlify/0868acae-7f5d-4997-af37-dce357af9582?logo=netlify&label=Hajira%2Fnetlify)
 [![Auto Changelog](https://github.com/Hajira-org/Hajira-frontend/actions/workflows/changelog.yml/badge.svg)](https://github.com/Hajira-org/Hajira-frontend/actions/workflows/changelog.yml)
-#  Hajira — A local Micro-Job Platform
+#  Hajira — Uber but for jobs
 
 Hajira is an African **community-driven micro-job platform** where people can post or claim small, hyperlocal jobs (e.g., deliveries, tutoring, translation, repairs).  
 The platform focuses on **trust, safety, and accessibility** while enabling secure, small-scale transactions. 
